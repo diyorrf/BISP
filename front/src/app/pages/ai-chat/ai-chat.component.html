@@ -1,0 +1,128 @@
+<div class="max-w-5xl mx-auto h-[calc(100vh-12rem)] flex flex-col">
+  <!-- Header -->
+  <div class="mb-6">
+    <h1 class="text-3xl font-semibold text-slate-900">AI Legal Assistant</h1>
+    <p class="text-slate-600 mt-2">
+      Ask questions about your uploaded documents
+    </p>
+  </div>
+
+  <!-- Document Selector -->
+  <div class="mb-4">
+    <select
+      [value]="selectedDocumentId()"
+      (change)="selectedDocumentId.set($any($event.target).value)"
+      class="w-full md:w-96 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+    >
+      <option value="">Select a document...</option>
+      @for (doc of documents(); track doc.id) {
+        <option [value]="doc.id">{{ doc.fileName }}</option>
+      }
+    </select>
+  </div>
+
+  <!-- Chat Container -->
+  <div class="bg-white rounded-xl border border-slate-200 flex-1 flex flex-col overflow-hidden">
+    <!-- Messages Area -->
+    <div class="flex-1 overflow-y-auto p-6 space-y-6">
+      @for (message of messages(); track message.id) {
+        <div class="flex gap-4" [class.flex-row-reverse]="message.role === 'user'">
+          <!-- Avatar -->
+          <div
+            class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center"
+            [class.bg-blue-100]="message.role === 'user'"
+            [class.bg-green-100]="message.role === 'assistant'"
+          >
+            @if (message.role === 'user') {
+              <lucide-icon [img]="icons.User" [size]="20" class="text-blue-600"></lucide-icon>
+            } @else {
+              <lucide-icon [img]="icons.Bot" [size]="20" class="text-green-600"></lucide-icon>
+            }
+          </div>
+
+          <!-- Message Content -->
+          <div class="flex-1 flex flex-col" [class.items-end]="message.role === 'user'">
+            <div
+              class="rounded-2xl px-4 py-3 max-w-3xl whitespace-pre-wrap"
+              [class.bg-blue-600]="message.role === 'user'"
+              [class.text-white]="message.role === 'user'"
+              [class.bg-slate-100]="message.role === 'assistant'"
+              [class.text-slate-900]="message.role === 'assistant'"
+            >
+              {{ message.content }}
+            </div>
+
+            <!-- References -->
+            @if (message.references?.length) {
+              <div class="mt-3 space-y-2 max-w-3xl">
+                <div class="flex items-center gap-2 text-sm text-slate-600">
+                  <lucide-icon [img]="icons.BookOpen" [size]="16"></lucide-icon>
+                  <span class="font-medium">Legal References:</span>
+                </div>
+                @for (ref of message.references; track ref.title) {
+                  <div class="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                    <p class="font-medium text-blue-900 text-sm">{{ ref.title }}</p>
+                    <p class="text-blue-700 text-xs mt-1">{{ ref.article }}</p>
+                  </div>
+                }
+              </div>
+            }
+
+            <p class="text-xs text-slate-500 mt-2">{{ formatTime(message.timestamp) }}</p>
+          </div>
+        </div>
+      }
+
+      @if (isTyping()) {
+        <div class="flex gap-4">
+          <div class="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+            <lucide-icon [img]="icons.Bot" [size]="20" class="text-green-600"></lucide-icon>
+          </div>
+          <div class="bg-slate-100 rounded-2xl px-4 py-3">
+            <lucide-icon [img]="icons.Loader" [size]="20" class="text-slate-600 animate-spin"></lucide-icon>
+          </div>
+        </div>
+      }
+
+      <div #messagesEnd></div>
+    </div>
+
+    <!-- Suggested Questions -->
+    @if (messages().length === 1) {
+      <div class="border-t border-slate-200 p-4 bg-slate-50">
+        <p class="text-sm font-medium text-slate-700 mb-3">Suggested questions:</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          @for (question of suggestedQuestions; track question) {
+            <button
+              (click)="selectQuestion(question)"
+              class="text-left text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 hover:border-blue-300 hover:bg-blue-50 transition-colors"
+            >
+              {{ question }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Input Area -->
+    <div class="border-t border-slate-200 p-4">
+      <div class="flex gap-3">
+        <input
+          type="text"
+          [(ngModel)]="input"
+          (keydown.enter)="sendMessage()"
+          placeholder="Ask a legal or compliance question..."
+          class="flex-1 px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
+        <button
+          (click)="sendMessage()"
+          [disabled]="!input.trim() || isTyping()"
+          class="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center gap-2"
+        >
+          <lucide-icon [img]="icons.Send" [size]="20"></lucide-icon>
+          <span class="hidden sm:inline">Send</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

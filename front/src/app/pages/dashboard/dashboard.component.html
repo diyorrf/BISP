@@ -1,0 +1,118 @@
+<div class="space-y-8">
+  <!-- Welcome Section -->
+  <div>
+    <h1 class="text-3xl font-semibold text-slate-900">Welcome to LegalGuard</h1>
+    <p class="text-slate-600 mt-2">
+      Your intelligent legal assistant for navigating Uzbekistan's business regulations
+    </p>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    @for (stat of stats; track stat.label) {
+      <div class="bg-white rounded-xl p-6 border border-slate-200">
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-slate-600 text-sm">{{ stat.label }}</p>
+            <p class="text-3xl font-semibold text-slate-900 mt-2">{{ loading() ? '—' : stat.value() }}</p>
+          </div>
+          <div
+            class="p-3 rounded-lg"
+            [class.bg-blue-50]="stat.color === 'blue'"
+            [class.bg-red-50]="stat.color === 'red'"
+            [class.bg-green-50]="stat.color === 'green'"
+            [class.bg-purple-50]="stat.color === 'purple'"
+          >
+            <lucide-icon
+              [img]="stat.icon"
+              [size]="24"
+              [class.text-blue-600]="stat.color === 'blue'"
+              [class.text-red-600]="stat.color === 'red'"
+              [class.text-green-600]="stat.color === 'green'"
+              [class.text-purple-600]="stat.color === 'purple'"
+            ></lucide-icon>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Quick Actions -->
+  <div>
+    <h2 class="text-xl font-semibold text-slate-900 mb-4">Quick Actions</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      @for (action of quickActions; track action.path) {
+        <a
+          [routerLink]="action.path"
+          class="bg-white rounded-xl p-6 border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all group block"
+        >
+          <div
+            class="inline-flex p-3 rounded-lg mb-4"
+            [class.bg-blue-50]="action.color === 'blue'"
+            [class.bg-purple-50]="action.color === 'purple'"
+            [class.bg-green-50]="action.color === 'green'"
+            [class.group-hover:bg-blue-100]="action.color === 'blue'"
+            [class.group-hover:bg-purple-100]="action.color === 'purple'"
+            [class.group-hover:bg-green-100]="action.color === 'green'"
+          >
+            <lucide-icon
+              [img]="action.icon"
+              [size]="24"
+              [class.text-blue-600]="action.color === 'blue'"
+              [class.text-purple-600]="action.color === 'purple'"
+              [class.text-green-600]="action.color === 'green'"
+            ></lucide-icon>
+          </div>
+          <h3 class="font-semibold text-slate-900 mb-2">{{ action.title }}</h3>
+          <p class="text-slate-600 text-sm">{{ action.description }}</p>
+        </a>
+      }
+    </div>
+  </div>
+
+  <!-- Recent Activity & Legal Updates -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2">
+      <h2 class="text-xl font-semibold text-slate-900 mb-4">Recent Activity</h2>
+      <div class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-200">
+        @for (activity of recentActivity(); track activity.id) {
+          <a
+            [routerLink]="activity.documentId ? ['/documents', activity.documentId] : '/documents'"
+            class="block p-4 hover:bg-slate-50 transition-colors"
+          >
+            <div class="flex items-start gap-3">
+              <div class="mt-1">
+                <lucide-icon [img]="activityIcon(activity.type)" [size]="20" class="text-slate-400"></lucide-icon>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="font-medium text-slate-900">{{ activity.title }}</p>
+                <p class="text-sm text-slate-600 mt-1 truncate">{{ activity.description }}</p>
+                <p class="text-xs text-slate-500 mt-2">{{ formatRelativeTime(activity.at) }}</p>
+              </div>
+            </div>
+          </a>
+        }
+        @if (recentActivity().length === 0) {
+          <div class="p-8 text-center text-slate-500 text-sm">
+            No recent activity. Upload a document or ask a question to get started.
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Legal Updates -->
+    <div>
+      <h2 class="text-xl font-semibold text-slate-900 mb-4">Legal Updates</h2>
+      <div class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-6 text-white">
+        <lucide-icon [img]="icons.TrendingUp" [size]="32" class="mb-4 opacity-90"></lucide-icon>
+        <h3 class="font-semibold mb-2">New Legislation Alert</h3>
+        <p class="text-sm text-blue-100 mb-4">
+          3 new amendments to business registration laws effective March 2026
+        </p>
+        <button class="bg-white text-blue-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors">
+          View Details
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

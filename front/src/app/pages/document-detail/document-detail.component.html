@@ -1,0 +1,115 @@
+<div class="space-y-6">
+  <div class="flex items-start justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-semibold text-slate-900">Document</h1>
+      <p class="text-slate-600 mt-2">View full details and continue your AI conversation.</p>
+    </div>
+    <a routerLink="/documents" class="px-4 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50">
+      Back to Documents
+    </a>
+  </div>
+
+  @if (loading()) {
+    <div class="bg-white rounded-xl border border-slate-200 p-6 flex items-center gap-3 text-slate-600">
+      <lucide-icon [img]="icons.Loader" [size]="18" class="animate-spin"></lucide-icon>
+      Loading document...
+    </div>
+  } @else if (document(); as doc) {
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Left: Document content -->
+      <div class="lg:col-span-2 space-y-4">
+        <div class="bg-white rounded-xl border border-slate-200 p-6">
+          <div class="flex items-start justify-between gap-4">
+            <div class="min-w-0">
+              <div class="flex items-center gap-3">
+                <div class="p-2 bg-blue-50 rounded-lg">
+                  <lucide-icon [img]="icons.FileText" [size]="20" class="text-blue-600"></lucide-icon>
+                </div>
+                <div class="min-w-0">
+                  <p class="font-semibold text-slate-900 truncate">{{ doc.fileName }}</p>
+                  <p class="text-sm text-slate-500 truncate">{{ doc.contentType }}</p>
+                </div>
+              </div>
+            </div>
+            <div class="text-right text-sm text-slate-600">
+              <div class="flex items-center justify-end gap-2">
+                <lucide-icon [img]="icons.HardDrive" [size]="16"></lucide-icon>
+                {{ formatSize(doc.sizeInBytes) }}
+              </div>
+              <div class="flex items-center justify-end gap-2 mt-1">
+                <lucide-icon [img]="icons.Calendar" [size]="16"></lucide-icon>
+                {{ doc.uploadedAt | date:'medium' }}
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6">
+            <div class="flex items-center gap-2 text-sm text-slate-600 mb-2">
+              <lucide-icon [img]="icons.Info" [size]="16"></lucide-icon>
+              Parsed content
+            </div>
+            <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 max-h-[55vh] overflow-auto whitespace-pre-wrap text-slate-800 text-sm leading-relaxed">
+              {{ doc.content }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: AI chat -->
+      <div class="space-y-4">
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden flex flex-col h-[calc(100vh-16rem)]">
+          <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <lucide-icon [img]="icons.MessageSquare" [size]="18" class="text-slate-600"></lucide-icon>
+              <p class="font-semibold text-slate-900">AI conversation</p>
+            </div>
+            <button (click)="clearChat()" class="text-xs px-2 py-1 rounded border border-slate-200 text-slate-600 hover:bg-slate-50">
+              Clear
+            </button>
+          </div>
+
+          <div class="flex-1 overflow-auto p-4 space-y-3">
+            @if (messages().length === 0) {
+              <div class="text-sm text-slate-500">
+                Ask a question about this document. Your conversation will be saved in this browser.
+              </div>
+            }
+            @for (m of messages(); track m.id) {
+              <div class="flex" [class.justify-end]="m.role === 'user'">
+                <div
+                  class="max-w-[90%] rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap"
+                  [class.bg-blue-600]="m.role === 'user'"
+                  [class.text-white]="m.role === 'user'"
+                  [class.bg-slate-100]="m.role === 'assistant'"
+                  [class.text-slate-900]="m.role === 'assistant'"
+                >
+                  {{ m.content || (m.role === 'assistant' && isTyping() ? '...' : '') }}
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="p-4 border-t border-slate-200">
+            <div class="flex gap-2">
+              <input
+                [(ngModel)]="input"
+                (keydown.enter)="send()"
+                placeholder="Ask about this document..."
+                class="flex-1 px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                (click)="send()"
+                [disabled]="!input.trim() || isTyping()"
+                class="px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <lucide-icon [img]="icons.Send" [size]="18"></lucide-icon>
+                <span class="hidden sm:inline">Send</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+

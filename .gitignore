@@ -1,0 +1,28 @@
+# Global ignores
+node_modules/
+.vscode/
+
+*.sln
+
+
+# ASP.NET (back)
+/back/bin/
+/back/obj/
+/back/.vs/
+/back/appsettings.Development.json
+/back/appsettings.Local.json
+/back/appsettings.json
+/back/appsettings.*.json
+/back/wwwroot/lib/
+/back/Properties/launchSettings.json
+
+
+# Angular (front)
+/front/node_modules/
+/front/dist/
+/front/.angular/cache/
+/front/.env
+/front/.env.local
+/front/.env.development
+/front/.env.production
+

@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+/* Tell Tailwind v4 where to scan for class names (paths relative to this file) */
+@source "./**/*.html";
+@source "./**/*.ts";
+
+@layer base {
+  * {
+    @apply border-slate-200;
+  }
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+  }
+}

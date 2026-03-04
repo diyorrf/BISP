@@ -1,0 +1,151 @@
+<div class="min-h-screen bg-slate-50">
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <a routerLink="/" class="flex items-center gap-2">
+          <div class="bg-gradient-to-br from-blue-600 to-blue-700 p-2 rounded-lg">
+            <lucide-icon [img]="icons.Shield" class="w-6 h-6 text-white"></lucide-icon>
+          </div>
+          <div>
+            <h1 class="font-semibold text-slate-900 text-base">LegalGuard</h1>
+            <p class="text-xs text-slate-500">Uzbekistan Legal Assistant</p>
+          </div>
+        </a>
+
+        <!-- Desktop Navigation -->
+        <nav class="hidden md:flex items-center gap-1">
+          @for (item of navigation; track item.path) {
+            <a
+              [routerLink]="item.path"
+              routerLinkActive="bg-blue-50 text-blue-700"
+              [routerLinkActiveOptions]="{ exact: item.path === '/' }"
+              class="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+            >
+              <lucide-icon [img]="item.icon" [size]="16"></lucide-icon>
+              <span class="text-sm font-medium">{{ item.name }}</span>
+            </a>
+          }
+          <!-- Account dropdown -->
+          <div class="relative ml-2">
+            <button
+              (click)="toggleAccountDropdown()"
+              class="flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-slate-200"
+            >
+              <lucide-icon [img]="icons.User" [size]="18"></lucide-icon>
+              <span class="text-sm font-medium">Account</span>
+            </button>
+            @if (accountDropdownOpen()) {
+              <div
+                class="absolute right-0 mt-1 w-72 rounded-xl border border-slate-200 bg-white shadow-lg py-3 z-50"
+                (click)="$event.stopPropagation()"
+              >
+                @if (account.account(); as acc) {
+                  <div class="px-4 pb-3 border-b border-slate-100">
+                    <p class="font-medium text-slate-900 truncate">{{ acc.email }}</p>
+                    @if (acc.fullName) {
+                      <p class="text-sm text-slate-500 truncate">{{ acc.fullName }}</p>
+                    }
+                    <div class="flex items-center gap-2 mt-2">
+                      <span
+                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
+                        [class.bg-amber-100]="acc.plan === 'Free'"
+                        [class.text-amber-800]="acc.plan === 'Free'"
+                        [class.bg-blue-100]="acc.plan === 'Pro'"
+                        [class.text-blue-800]="acc.plan === 'Pro'"
+                        [class.bg-purple-100]="acc.plan === 'Enterprise'"
+                        [class.text-purple-800]="acc.plan === 'Enterprise'"
+                      >
+                        @if (acc.plan === 'Pro') {
+                          <lucide-icon [img]="icons.Zap" [size]="12"></lucide-icon>
+                        } @else if (acc.plan === 'Enterprise') {
+                          <lucide-icon [img]="icons.Crown" [size]="12"></lucide-icon>
+                        }
+                        {{ planLabel(acc.plan) }}
+                      </span>
+                      @if (!acc.emailConfirmed) {
+                        <span class="text-xs text-amber-600">Unverified</span>
+                      }
+                    </div>
+                  </div>
+                  <div class="px-4 py-3 flex items-center gap-2 text-slate-700">
+                    <lucide-icon [img]="icons.Zap" [size]="16" class="text-amber-500"></lucide-icon>
+                    <span class="text-sm"><strong>{{ acc.tokensRemaining | number }}</strong> tokens left</span>
+                  </div>
+                }
+                <div class="border-t border-slate-100 pt-2 px-2">
+                  <button
+                    (click)="logout()"
+                    class="flex w-full items-center gap-2 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 text-sm font-medium"
+                  >
+                    <lucide-icon [img]="icons.LogOut" [size]="16"></lucide-icon>
+                    Log out
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        </nav>
+
+        <!-- Mobile Menu Button -->
+        <button
+          (click)="toggleMobile()"
+          class="md:hidden p-2 rounded-lg hover:bg-slate-100"
+        >
+          @if (mobileMenuOpen()) {
+            <lucide-icon [img]="icons.X" [size]="24" class="text-slate-600"></lucide-icon>
+          } @else {
+            <lucide-icon [img]="icons.Menu" [size]="24" class="text-slate-600"></lucide-icon>
+          }
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Navigation -->
+    @if (mobileMenuOpen()) {
+      <div class="md:hidden border-t border-slate-200 bg-white">
+        <nav class="px-4 py-2 space-y-1">
+          @for (item of navigation; track item.path) {
+            <a
+              [routerLink]="item.path"
+              routerLinkActive="bg-blue-50 text-blue-700"
+              [routerLinkActiveOptions]="{ exact: item.path === '/' }"
+              (click)="closeMobile()"
+              class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-slate-600 hover:bg-slate-50"
+            >
+              <lucide-icon [img]="item.icon" [size]="20"></lucide-icon>
+              <span class="font-medium">{{ item.name }}</span>
+            </a>
+          }
+          @if (account.account(); as acc) {
+            <div class="px-4 py-3 border-t border-slate-100 text-sm text-slate-600">
+              <p class="font-medium text-slate-900">{{ acc.email }}</p>
+              <p>{{ acc.tokensRemaining | number }} tokens · {{ planLabel(acc.plan) }}</p>
+            </div>
+          }
+          <button
+            (click)="logout()"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-red-600 hover:bg-red-50 w-full text-left"
+          >
+            <lucide-icon [img]="icons.LogOut" [size]="20"></lucide-icon>
+            <span class="font-medium">Log out</span>
+          </button>
+        </nav>
+      </div>
+    }
+  </header>
+
+  <!-- Click outside to close account dropdown -->
+  @if (accountDropdownOpen()) {
+    <div
+      class="fixed inset-0 z-40"
+      (click)="closeAccountDropdown()"
+      aria-hidden="true"
+    ></div>
+  }
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <router-outlet />
+  </main>
+</div>
