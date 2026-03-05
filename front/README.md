@@ -12,8 +12,8 @@ Web UI for LegalGuard. Built with Angular 20, Tailwind CSS, and Lucide icons.
 From the repo root (parent of `front/`):
 
 ```bash
-git clone <repo-url>
-cd LegalGuard
+git clone https://github.com/diyorrf/BISP.git
+cd BISP
 ```
 
 Frontend code lives in the `front/` directory.

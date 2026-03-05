@@ -13,8 +13,8 @@ API and business logic for LegalGuard. Uses .NET 9, Entity Framework Core, Postg
 From the repo root (parent of `back/`):
 
 ```bash
-git clone <repo-url>
-cd LegalGuard
+git clone https://github.com/diyorrf/BISP.git
+cd BISP
 ```
 
 Backend code lives in the `back/` directory.

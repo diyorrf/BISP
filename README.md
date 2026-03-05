@@ -1,14 +1,16 @@
-# LegalGuard
+# LegalGuard (BISP)
 
 Full-stack app: ASP.NET 9 backend, Angular 20 frontend, PostgreSQL database.
+
+**Repository:** [https://github.com/diyorrf/BISP](https://github.com/diyorrf/BISP)
 
 ## Quick start with Docker
 
 Prerequisites: [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/).
 
 ```bash
-git clone <repo-url>
-cd LegalGuard
+git clone https://github.com/diyorrf/BISP.git
+cd BISP
 docker compose up --build
 ```
 
