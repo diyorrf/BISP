@@ -1,59 +1,78 @@
-# Front
+# LegalGuard Frontend (Angular 20)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.0.5.
+Web UI for LegalGuard. Built with Angular 20, Tailwind CSS, and Lucide icons.
 
-## Development server
+## Prerequisites
 
-To start a local development server, run:
+- [Node.js](https://nodejs.org/) 20+ (LTS)
+- [npm](https://www.npmjs.com/) (comes with Node)
+
+## 1. Clone the repository
+
+From the repo root (parent of `front/`):
+
+```bash
+git clone <repo-url>
+cd LegalGuard
+```
+
+Frontend code lives in the `front/` directory.
+
+## 2. Install dependencies
+
+From the project root (parent of `front/`):
+
+```bash
+cd front
+npm install
+```
+
+## 3. Configure the API URL (optional)
+
+The app talks to the backend API. By default it uses:
+
+- **API:** `http://localhost:5041/api`
+- **WebSocket:** `ws://localhost:5041/ws`
+
+To change them, edit `src/environments/environment.ts` (and `environment.prod.ts` for production builds).
+
+Ensure the backend is running on the same host/port (see `back/README.md`).
+
+## 4. Run the development server
+
+```bash
+npm start
+```
+
+Or:
 
 ```bash
 ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Open **http://localhost:4200/** in your browser. The app will reload when you change source files.
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
+## Build for production
 
 ```bash
 ng build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Output is in `dist/`. Serve that folder with any static host or use the backend to proxy.
 
-## Running unit tests
+## Running with Docker
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
+From the repo root:
 
 ```bash
-ng e2e
+docker compose up
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+Frontend is served on **http://localhost:4200**, backend on **http://localhost:5041**, and PostgreSQL on port **5432**. See the root `README.md` or `docker-compose.yml` for details.
 
-## Additional Resources
+## Project structure
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- `src/app/` — Angular app (components, services, guards, models)
+- `src/environments/` — API URL and env config
+- `src/styles.css` — global and Tailwind styles
+- `angular.json` — Angular CLI config

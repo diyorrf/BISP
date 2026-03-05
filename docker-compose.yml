@@ -1,19 +1,49 @@
 version: "3.9"
 
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: legalguard-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: LegalGuard
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: ./back
-    container_name: backend
-    restart: always
+    container_name: legalguard-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
-      - "5000:5000"
+      - "5041:5000"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:5000
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=LegalGuard;Username=postgres;Password=postgres"
+    # Override appsettings connection when running in Docker:
+    # backend uses Host=db to reach the db container
 
   frontend:
     build: ./front
-    container_name: frontend
+    container_name: legalguard-frontend
     restart: unless-stopped
+    depends_on:
+      - backend
     ports:
       - "4200:4200"
+    # Frontend app (browser) calls API at http://localhost:5041 when user opens http://localhost:4200
+
+volumes:
+  pgdata:
