@@ -83,12 +83,24 @@ export class AiChatComponent implements AfterViewChecked {
       return;
     }
 
-    this.questionService.ask({ documentId: docId, questionText: question }).subscribe({
+    const allMsgs = this.messages()
+      .filter(m => m.role === 'user' || m.role === 'assistant')
+      .slice(1); // skip the initial greeting
+    const history = allMsgs
+      .slice(0, -1) // exclude the current message (sent separately as questionText)
+      .slice(-20)
+      .map(m => ({ role: m.role, content: m.content }));
+
+    this.questionService.ask({ documentId: docId, questionText: question, history }).subscribe({
       next: (res) => {
         this.addAssistantMessage(res.answer);
       },
-      error: () => {
-        this.addAssistantMessage('Sorry, I encountered an error processing your question. Please try again.');
+      error: (err) => {
+        if (err.status === 402) {
+          this.addAssistantMessage('You have used all your tokens for today. To get more tokens, please upgrade your plan or wait until tomorrow.');
+        } else {
+          this.addAssistantMessage('Sorry, I encountered an error processing your question. Please try again.');
+        }
       }
     });
   }

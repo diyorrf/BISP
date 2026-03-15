@@ -9,7 +9,9 @@ namespace back.Services.Auth
     public interface IAuthService
     {
         Task<bool> RegisterAsync(RegisterRequest request);
-        Task<string?> LoginAsync(LoginRequest request);
+        Task<(string? Token, string? Error)> LoginAsync(LoginRequest request);
         Task<string?> ConfirmEmailAsync(string token);
+        Task<string?> VerifyCodeAsync(string email, string code);
+        Task<bool> ResendCodeAsync(string email);
     }
 }

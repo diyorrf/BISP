@@ -4,4 +4,5 @@ export interface AccountDto {
   tokensRemaining: number;
   plan: string;
   emailConfirmed: boolean;
+  planExpiresAt?: string;
 }

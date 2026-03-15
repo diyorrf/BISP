@@ -47,13 +47,13 @@ namespace back.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var token = await _authService.LoginAsync(request);
+            var (token, error) = await _authService.LoginAsync(request);
 
             if (token == null)
                 return Unauthorized(new
                 {
                     Success = false,
-                    Message = "Invalid credentials or email not confirmed"
+                    Message = error
                 });
 
             return Ok(new
@@ -80,6 +80,51 @@ namespace back.Controllers
                 Success = true,
                 Token = jwt,
                 Message = "Email confirmed successfully"
+            });
+        }
+
+        [HttpPost("verify-code")]
+        public async Task<IActionResult> VerifyCode(VerifyCodeRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var jwt = await _authService.VerifyCodeAsync(request.Email, request.Code);
+
+            if (jwt == null)
+                return BadRequest(new
+                {
+                    Success = false,
+                    Message = "Invalid or expired verification code"
+                });
+
+            return Ok(new
+            {
+                Success = true,
+                Token = jwt,
+                Message = "Email verified successfully"
+            });
+        }
+
+        [HttpPost("resend-code")]
+        public async Task<IActionResult> ResendCode(ResendCodeRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var success = await _authService.ResendCodeAsync(request.Email);
+
+            if (!success)
+                return BadRequest(new
+                {
+                    Success = false,
+                    Message = "Could not resend code. Email may already be confirmed."
+                });
+
+            return Ok(new
+            {
+                Success = true,
+                Message = "A new verification code has been sent to your email."
             });
         }
     }

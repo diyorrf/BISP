@@ -1,6 +1,7 @@
 using System.Net.WebSockets;
 using System.Text.Json;
 using back.Extensions;
+using back.Models;
 using back.Models.DTOs;
 using back.Services.Question;
 
@@ -57,6 +58,10 @@ namespace back.Infrastructure
                     catch (JsonException)
                     {
                         await _wsHandler.SendMessageAsync(socket, new { error = "Invalid JSON" }, ct);
+                    }
+                    catch (InsufficientTokensException ex)
+                    {
+                        await _wsHandler.SendMessageAsync(socket, new { error = ex.Message, code = "TOKENS_EXHAUSTED" }, ct);
                     }
                     catch (Exception ex)
                     {

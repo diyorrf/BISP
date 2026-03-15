@@ -74,7 +74,14 @@ export class DocumentDetailComponent implements OnInit {
     let assistantContent = '';
     this.messages.update(m => [...m, { id: assistantId, role: 'assistant', content: '', at: new Date().toISOString() }]);
 
-    this.questionService.askStream({ documentId: this.docId(), questionText: text }).subscribe({
+    const withContent = this.messages()
+      .filter(m => (m.role === 'user' || m.role === 'assistant') && m.content.length > 0);
+    const history = withContent
+      .slice(0, -1) // exclude the current message (sent separately as questionText)
+      .slice(-20)
+      .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }));
+
+    this.questionService.askStream({ documentId: this.docId(), questionText: text, history }).subscribe({
       next: (chunk) => {
         if (chunk.content) {
           assistantContent += chunk.content;
@@ -87,10 +94,12 @@ export class DocumentDetailComponent implements OnInit {
           this.saveChat();
         }
       },
-      error: () => {
+      error: (err: any) => {
         this.isTyping.set(false);
+        const tokenMsg = 'You have used all your tokens for today. To get more tokens, please upgrade your plan or wait until tomorrow.';
+        const errorContent = err?.code === 'TOKENS_EXHAUSTED' ? tokenMsg : 'Sorry, I could not answer that. Please try again.';
         this.messages.update(m =>
-          m.map(msg => msg.id === assistantId ? { ...msg, content: 'Sorry, I could not answer that. Please try again.' } : msg)
+          m.map(msg => msg.id === assistantId ? { ...msg, content: errorContent } : msg)
         );
         this.saveChat();
       }

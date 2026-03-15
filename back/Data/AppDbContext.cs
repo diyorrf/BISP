@@ -19,6 +19,10 @@ namespace back.Data
         public DbSet<EmailConfirmationToken> EmailConfirmationTokens => Set<EmailConfirmationToken>();
         public DbSet<Document> Documents => Set<Document>();
         public DbSet<Question> Questions => Set<Question>();
+        public DbSet<LegalReference> LegalReferences => Set<LegalReference>();
+        public DbSet<RegulatoryUpdate> RegulatoryUpdates => Set<RegulatoryUpdate>();
+        public DbSet<RegulatoryAlert> RegulatoryAlerts => Set<RegulatoryAlert>();
+        public DbSet<Payment> Payments => Set<Payment>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -55,6 +59,70 @@ namespace back.Data
                 entity.HasOne(e => e.Document)
                     .WithMany(d => d.Questions)
                     .HasForeignKey(e => e.DocumentId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<LegalReference>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Title).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.ArticleOrSection).HasMaxLength(200);
+                entity.Property(e => e.Jurisdiction).HasMaxLength(100);
+                entity.HasIndex(e => e.DocumentId);
+
+                entity.HasOne(e => e.Document)
+                    .WithMany(d => d.LegalReferences)
+                    .HasForeignKey(e => e.DocumentId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<RegulatoryUpdate>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Title).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.LawIdentifier).IsRequired().HasMaxLength(500);
+                entity.HasIndex(e => e.IsProcessed);
+                entity.HasIndex(e => e.PublishedAt);
+            });
+
+            modelBuilder.Entity<RegulatoryAlert>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => e.DocumentId);
+                entity.HasIndex(e => e.IsRead);
+
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Document)
+                    .WithMany(d => d.RegulatoryAlerts)
+                    .HasForeignKey(e => e.DocumentId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.RegulatoryUpdate)
+                    .WithMany(r => r.Alerts)
+                    .HasForeignKey(e => e.RegulatoryUpdateId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.LegalReference)
+                    .WithMany()
+                    .HasForeignKey(e => e.LegalReferenceId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<Payment>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => e.CreatedAt);
+                entity.Property(e => e.Amount).HasPrecision(10, 2);
+
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
         }

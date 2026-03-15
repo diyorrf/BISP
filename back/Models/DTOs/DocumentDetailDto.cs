@@ -7,6 +7,7 @@ public record DocumentDetailDto(
     long SizeInBytes,
     DateTime UploadedAt,
     DateTime? LastAccessedAt,
-    string Content
+    string Content,
+    string? StoredFileName = null
 );
 

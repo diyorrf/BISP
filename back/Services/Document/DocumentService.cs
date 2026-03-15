@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using back.Data.Repos.Interfaces;
 using back.Models.DTOs;
 using back.Services.Parser;
+using back.Services.Regulatory;
 using DocumentEntity = back.Data.Entities.Document;
 
 namespace back.Services.Document
@@ -14,16 +15,23 @@ namespace back.Services.Document
     {
         private readonly IDocumentRepository _documentRepository;
         private readonly IDocumentParserService _parserService;
+        private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<DocumentService> _logger;
+        private readonly string _storagePath;
 
         public DocumentService(
             IDocumentRepository documentRepository,
             IDocumentParserService parserService,
-            ILogger<DocumentService> logger)
+            IServiceScopeFactory scopeFactory,
+            ILogger<DocumentService> logger,
+            IWebHostEnvironment env)
         {
             _documentRepository = documentRepository;
             _parserService = parserService;
+            _scopeFactory = scopeFactory;
             _logger = logger;
+            _storagePath = Path.Combine(env.ContentRootPath, "Storage");
+            Directory.CreateDirectory(_storagePath);
         }
 
         public async Task<DocumentDto> UploadDocumentAsync(DocumentUploadDto uploadDto, long userId, CancellationToken ct = default)
@@ -38,20 +46,46 @@ namespace back.Services.Document
 
             var content = await _parserService.ExtractTextAsync(file, ct);
 
+            var docId = Guid.NewGuid();
+            var extension = Path.GetExtension(file.FileName);
+            var storedFileName = $"{docId}{extension}";
+            var filePath = Path.Combine(_storagePath, storedFileName);
+
+            await using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream, ct);
+            }
+
             var document = new DocumentEntity
             {
-                Id = Guid.NewGuid(),
+                Id = docId,
                 UserId = userId,
                 FileName = file.FileName,
                 ContentType = file.ContentType,
                 Content = content,
+                StoredFileName = storedFileName,
                 SizeInBytes = file.Length,
                 UploadedAt = DateTime.UtcNow
             };
 
             await _documentRepository.AddAsync(document, ct);
             
-            _logger.LogInformation("Document {DocumentId} uploaded: {FileName}", document.Id, document.FileName);
+            _logger.LogInformation("Document {DocumentId} uploaded and stored as {StoredFile}: {FileName}", 
+                document.Id, storedFileName, document.FileName);
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    using var scope = _scopeFactory.CreateScope();
+                    var extractionService = scope.ServiceProvider.GetRequiredService<ILegalReferenceExtractionService>();
+                    await extractionService.ExtractReferencesAsync(document.Id, content);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Background legal reference extraction failed for document {DocumentId}", document.Id);
+                }
+            });
 
             return new DocumentDto(
                 document.Id,
@@ -95,7 +129,8 @@ namespace back.Services.Document
                 document.SizeInBytes,
                 document.UploadedAt,
                 document.LastAccessedAt,
-                document.Content
+                document.Content,
+                document.StoredFileName
             );
         }
 
@@ -114,10 +149,27 @@ namespace back.Services.Document
 
         public async Task<bool> DeleteDocumentAsync(Guid id, long userId, CancellationToken ct = default)
         {
+            var document = await _documentRepository.GetByIdAndUserIdAsync(id, userId, ct);
+            if (document == null) return false;
+
             var deleted = await _documentRepository.DeleteByIdAndUserIdAsync(id, userId, ct);
-            if (deleted)
-                _logger.LogInformation("Document {DocumentId} deleted", id);
+            if (deleted && !string.IsNullOrEmpty(document.StoredFileName))
+            {
+                var filePath = Path.Combine(_storagePath, document.StoredFileName);
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                    _logger.LogInformation("Document {DocumentId} file deleted from storage: {StoredFile}", id, document.StoredFileName);
+                }
+            }
             return deleted;
+        }
+
+        public string? GetStoragePath(string? storedFileName)
+        {
+            if (string.IsNullOrEmpty(storedFileName)) return null;
+            var path = Path.Combine(_storagePath, storedFileName);
+            return File.Exists(path) ? path : null;
         }
     }
 }

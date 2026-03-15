@@ -11,10 +11,11 @@ node_modules/
 /back/.vs/
 /back/appsettings.Development.json
 /back/appsettings.Local.json
-# /back/appsettings.json
+/back/appsettings.json
 /back/appsettings.*.json
 /back/wwwroot/lib/
 /back/Properties/launchSettings.json
+/back/Storage/
 
 
 # Angular (front)

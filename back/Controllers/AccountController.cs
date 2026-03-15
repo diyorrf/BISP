@@ -1,8 +1,10 @@
+using back.Data;
 using back.Data.Repos.Interfaces;
 using back.Extensions;
 using back.Models.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace back.Controllers;
 
@@ -12,10 +14,12 @@ namespace back.Controllers;
 public class AccountController : ControllerBase
 {
     private readonly IUserRepository _userRepository;
+    private readonly AppDbContext _db;
 
-    public AccountController(IUserRepository userRepository)
+    public AccountController(IUserRepository userRepository, AppDbContext db)
     {
         _userRepository = userRepository;
+        _db = db;
     }
 
     [HttpGet("me")]
@@ -30,12 +34,23 @@ public class AccountController : ControllerBase
         if (user == null)
             return Unauthorized();
 
+        DateTime? planExpiry = null;
+        if (user.Plan != "Free")
+        {
+            planExpiry = await _db.Payments
+                .Where(p => p.UserId == userId && p.Status == "completed")
+                .OrderByDescending(p => p.CreatedAt)
+                .Select(p => p.PlanExpiresAt)
+                .FirstOrDefaultAsync(ct);
+        }
+
         return Ok(new AccountDto(
             Email: user.Email,
             FullName: user.FullName,
             TokensRemaining: user.TokensRemaining,
             Plan: user.Plan ?? "Free",
-            EmailConfirmed: user.EmailConfirmed
+            EmailConfirmed: user.EmailConfirmed,
+            PlanExpiresAt: planExpiry
         ));
     }
 }

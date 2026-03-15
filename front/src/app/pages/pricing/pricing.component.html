@@ -1,0 +1,170 @@
+<div class="space-y-8">
+  <!-- Header -->
+  <div class="text-center">
+    <h1 class="text-3xl font-bold text-slate-900">Choose Your Plan</h1>
+    <p class="mt-2 text-slate-600">Upgrade your LegalGuard experience with more AI prompts and features</p>
+  </div>
+
+  <!-- Success/Error messages -->
+  @if (successMessage()) {
+    <div class="mx-auto max-w-2xl rounded-xl border border-green-200 bg-green-50 px-6 py-4 text-green-800 text-center font-medium">
+      {{ successMessage() }}
+    </div>
+  }
+  @if (errorMessage()) {
+    <div class="mx-auto max-w-2xl rounded-xl border border-red-200 bg-red-50 px-6 py-4 text-red-800 text-center font-medium">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <!-- Plans Grid -->
+  @if (loading()) {
+    <div class="flex justify-center py-16">
+      <lucide-icon [img]="icons.Loader" [size]="32" class="animate-spin text-blue-600"></lucide-icon>
+    </div>
+  } @else {
+    <div class="grid gap-6 md:grid-cols-3 max-w-5xl mx-auto">
+      @for (plan of plans(); track plan.id) {
+        <div
+          class="relative rounded-2xl border-2 p-6 flex flex-col transition-shadow hover:shadow-lg"
+          [class]="getPlanColors(plan.id).card"
+        >
+          <!-- Popular badge for Pro -->
+          @if (plan.id === 'Pro') {
+            <div class="absolute -top-3 left-1/2 -translate-x-1/2">
+              <span class="rounded-full bg-blue-600 px-4 py-1 text-xs font-bold text-white uppercase tracking-wide">
+                Most Popular
+              </span>
+            </div>
+          }
+
+          <!-- Current plan badge -->
+          @if (isCurrentPlan(plan.id)) {
+            <div class="absolute -top-3 right-4">
+              <span class="rounded-full bg-green-600 px-3 py-1 text-xs font-bold text-white">
+                Current Plan
+              </span>
+            </div>
+          }
+
+          <!-- Plan header -->
+          <div class="text-center mb-6 pt-2">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-3" [class]="getPlanColors(plan.id).badge">
+              <lucide-icon [img]="getPlanIcon(plan.id)" [size]="24" [class]="getPlanColors(plan.id).icon"></lucide-icon>
+            </div>
+            <h2 class="text-xl font-bold text-slate-900">{{ plan.name }}</h2>
+            <p class="text-sm text-slate-500 mt-1">{{ plan.description }}</p>
+          </div>
+
+          <!-- Price -->
+          <div class="text-center mb-6">
+            @if (plan.price === 0) {
+              <span class="text-4xl font-bold text-slate-900">Free</span>
+            } @else {
+              <span class="text-4xl font-bold text-slate-900">${{ plan.price | number:'1.2-2' }}</span>
+              <span class="text-slate-500">/month</span>
+            }
+          </div>
+
+          <!-- Features -->
+          <ul class="space-y-3 mb-8 flex-1">
+            @for (feature of plan.features; track feature) {
+              <li class="flex items-start gap-2">
+                <lucide-icon [img]="icons.Check" [size]="18" class="text-green-500 mt-0.5 shrink-0"></lucide-icon>
+                <span class="text-sm text-slate-700">{{ feature }}</span>
+              </li>
+            }
+          </ul>
+
+          <!-- Action button -->
+          <div class="mt-auto">
+            @if (isCurrentPlan(plan.id)) {
+              <button
+                disabled
+                class="w-full rounded-xl py-3 px-4 text-sm font-semibold bg-slate-100 text-slate-400 cursor-not-allowed"
+              >
+                Current Plan
+              </button>
+            } @else if (plan.price === 0) {
+              <button
+                disabled
+                class="w-full rounded-xl py-3 px-4 text-sm font-semibold bg-slate-100 text-slate-400 cursor-not-allowed"
+              >
+                Default Plan
+              </button>
+            } @else if (processingPlan() === plan.id) {
+              <div class="flex items-center justify-center gap-2 py-3">
+                <lucide-icon [img]="icons.Loader" [size]="18" class="animate-spin text-blue-600"></lucide-icon>
+                <span class="text-sm font-medium text-blue-600">Processing payment...</span>
+              </div>
+            } @else if (isUpgrade(plan.id)) {
+              <google-pay-button
+                [environment]="'TEST'"
+                [paymentRequest]="getPaymentRequest(plan)"
+                [buttonType]="'subscribe'"
+                [buttonColor]="'black'"
+                [buttonSizeMode]="'fill'"
+                [buttonRadius]="12"
+                [loadPaymentDataCallback]="getPaymentDataCallback(plan)"
+                [errorCallback]="getErrorCallback(plan)"
+                style="width: 100%; display: block;"
+              ></google-pay-button>
+            } @else {
+              <button
+                disabled
+                class="w-full rounded-xl py-3 px-4 text-sm font-semibold bg-slate-100 text-slate-400 cursor-not-allowed"
+              >
+                Included in your plan
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Payment History -->
+  @if (history().length > 0) {
+    <div class="max-w-3xl mx-auto mt-12">
+      <h2 class="text-lg font-bold text-slate-900 mb-4">Payment History</h2>
+      <div class="rounded-xl border border-slate-200 bg-white overflow-hidden">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50 text-slate-600">
+            <tr>
+              <th class="text-left px-4 py-3 font-medium">Date</th>
+              <th class="text-left px-4 py-3 font-medium">Plan</th>
+              <th class="text-left px-4 py-3 font-medium">Amount</th>
+              <th class="text-left px-4 py-3 font-medium">Status</th>
+              <th class="text-left px-4 py-3 font-medium">Expires</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            @for (payment of history(); track payment.id) {
+              <tr class="hover:bg-slate-50">
+                <td class="px-4 py-3 text-slate-700">{{ payment.createdAt | date:'mediumDate' }}</td>
+                <td class="px-4 py-3">
+                  <span
+                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                    [class.bg-blue-100]="payment.plan === 'Pro'"
+                    [class.text-blue-700]="payment.plan === 'Pro'"
+                    [class.bg-purple-100]="payment.plan === 'Enterprise'"
+                    [class.text-purple-700]="payment.plan === 'Enterprise'"
+                  >
+                    {{ payment.plan }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-slate-700">${{ payment.amount | number:'1.2-2' }}</td>
+                <td class="px-4 py-3">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                    {{ payment.status }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-slate-500">{{ payment.planExpiresAt | date:'mediumDate' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>

@@ -1,6 +1,12 @@
+export interface ChatMessageDto {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 export interface QuestionRequest {
   documentId: string;
   questionText: string;
+  history?: ChatMessageDto[];
 }
 
 export interface QuestionResponse {

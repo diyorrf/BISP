@@ -12,9 +12,12 @@ namespace back.Data.Entities
         public string FileName { get; set; } = string.Empty;
         public string ContentType { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
+        public string? StoredFileName { get; set; }
         public long SizeInBytes { get; set; }
         public DateTime UploadedAt { get; set; }
         public DateTime? LastAccessedAt { get; set; }
         public ICollection<Question> Questions { get; set; } = new List<Question>();
+        public ICollection<LegalReference> LegalReferences { get; set; } = new List<LegalReference>();
+        public ICollection<RegulatoryAlert> RegulatoryAlerts { get; set; } = new List<RegulatoryAlert>();
     }
 }

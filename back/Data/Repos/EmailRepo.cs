@@ -27,10 +27,25 @@ namespace back.Data.Repos
                 .FirstOrDefaultAsync(t => t.Token == token);
         }
 
+        public async Task<EmailConfirmationToken?> GetByUserIdAsync(long userId)
+        {
+            return await _context.EmailConfirmationTokens
+                .Include(t => t.User)
+                .FirstOrDefaultAsync(t => t.UserId == userId);
+        }
+
         public async Task RemoveAsync(EmailConfirmationToken token)
         {
             _context.EmailConfirmationTokens.Remove(token);
             await Task.CompletedTask;
+        }
+
+        public async Task RemoveByUserIdAsync(long userId)
+        {
+            var tokens = await _context.EmailConfirmationTokens
+                .Where(t => t.UserId == userId)
+                .ToListAsync();
+            _context.EmailConfirmationTokens.RemoveRange(tokens);
         }
 
         public async Task SaveChangesAsync()

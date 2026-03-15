@@ -1,4 +1,5 @@
 using back.Extensions;
+using back.Models;
 using back.Models.DTOs;
 using back.Services.Question;
 using Microsoft.AspNetCore.Authorization;
@@ -39,6 +40,10 @@ namespace back.Controllers
             {
                 var response = await _questionService.AskQuestionAsync(request, userId, ct);
                 return Ok(response);
+            }
+            catch (InsufficientTokensException ex)
+            {
+                return StatusCode(402, new { message = ex.Message });
             }
             catch (ArgumentException ex)
             {

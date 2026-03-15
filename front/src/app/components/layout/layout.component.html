@@ -26,6 +26,20 @@
               <span class="text-sm font-medium">{{ item.name }}</span>
             </a>
           }
+          <!-- Notification Bell -->
+          <a
+            routerLink="/alerts"
+            class="relative ml-2 p-2 rounded-lg transition-colors text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+            title="Regulatory Alerts"
+          >
+            <lucide-icon [img]="icons.Bell" [size]="20"></lucide-icon>
+            @if (alertService.unreadCount() > 0) {
+              <span class="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">
+                {{ alertService.unreadCount() > 99 ? '99+' : alertService.unreadCount() }}
+              </span>
+            }
+          </a>
+
           <!-- Account dropdown -->
           <div class="relative ml-2">
             <button
@@ -71,6 +85,20 @@
                   <div class="px-4 py-3 flex items-center gap-2 text-slate-700">
                     <lucide-icon [img]="icons.Zap" [size]="16" class="text-amber-500"></lucide-icon>
                     <span class="text-sm"><strong>{{ acc.tokensRemaining | number }}</strong> tokens left</span>
+                  </div>
+                  <div class="px-2 pb-2">
+                    <a
+                      routerLink="/pricing"
+                      (click)="closeAccountDropdown()"
+                      class="flex w-full items-center gap-2 px-3 py-2 rounded-lg text-blue-600 hover:bg-blue-50 text-sm font-medium"
+                    >
+                      <lucide-icon [img]="icons.CreditCard" [size]="16"></lucide-icon>
+                      @if (acc.plan === 'Free') {
+                        Upgrade Plan
+                      } @else {
+                        Manage Plan
+                      }
+                    </a>
                   </div>
                 }
                 <div class="border-t border-slate-100 pt-2 px-2">

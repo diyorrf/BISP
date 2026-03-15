@@ -1,9 +1,10 @@
-import { Component, signal, OnInit } from '@angular/core';
+import { Component, signal, OnInit, OnDestroy } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
-import { LucideAngularModule, Shield, FileText, MessageSquare, CheckCircle, FolderOpen, Menu, X, LogOut, User, Zap, Crown } from 'lucide-angular';
+import { LucideAngularModule, Shield, FileText, MessageSquare, CheckCircle, FolderOpen, Menu, X, LogOut, User, Zap, Crown, Bell, CreditCard } from 'lucide-angular';
 import { AuthService } from '../../services/auth.service';
 import { AccountService } from '../../services/account.service';
+import { AlertService } from '../../services/alert.service';
 
 @Component({
   selector: 'app-layout',
@@ -11,8 +12,8 @@ import { AccountService } from '../../services/account.service';
   imports: [RouterOutlet, RouterLink, RouterLinkActive, LucideAngularModule, DecimalPipe],
   templateUrl: './layout.component.html'
 })
-export class LayoutComponent implements OnInit {
-  readonly icons = { Shield, FileText, MessageSquare, CheckCircle, FolderOpen, Menu, X, LogOut, User, Zap, Crown };
+export class LayoutComponent implements OnInit, OnDestroy {
+  readonly icons = { Shield, FileText, MessageSquare, CheckCircle, FolderOpen, Menu, X, LogOut, User, Zap, Crown, Bell, CreditCard };
   mobileMenuOpen = signal(false);
   accountDropdownOpen = signal(false);
 
@@ -22,15 +23,22 @@ export class LayoutComponent implements OnInit {
     { name: 'AI Assistant', path: '/chat', icon: MessageSquare },
     { name: 'Business Checker', path: '/business-checker', icon: CheckCircle },
     { name: 'Documents', path: '/documents', icon: FolderOpen },
+    { name: 'Alerts', path: '/alerts', icon: Bell },
   ];
 
   constructor(
     public auth: AuthService,
-    public account: AccountService
+    public account: AccountService,
+    public alertService: AlertService
   ) {}
 
   ngOnInit(): void {
     this.account.load().subscribe();
+    this.alertService.startPolling();
+  }
+
+  ngOnDestroy(): void {
+    this.alertService.stopPolling();
   }
 
   toggleMobile(): void {

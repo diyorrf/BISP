@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { LoginRequest, RegisterRequest, AuthResponse } from '../models/user.model';
+import { LoginRequest, RegisterRequest, AuthResponse, VerifyCodeRequest } from '../models/user.model';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -28,6 +28,20 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/register`, request);
   }
 
+  verifyCode(request: VerifyCodeRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/verify-code`, request).pipe(
+      tap(res => {
+        if (res.success && res.token) {
+          this.setToken(res.token);
+        }
+      })
+    );
+  }
+
+  resendCode(email: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/resend-code`, { email });
+  }
+
   logout(): void {
     localStorage.removeItem(this.TOKEN_KEY);
     this.tokenSignal.set(null);
@@ -38,7 +52,7 @@ export class AuthService {
     return this.tokenSignal();
   }
 
-  private setToken(token: string): void {
+  setToken(token: string): void {
     localStorage.setItem(this.TOKEN_KEY, token);
     this.tokenSignal.set(token);
   }

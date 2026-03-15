@@ -5,5 +5,6 @@ public record AccountDto(
     string? FullName,
     int TokensRemaining,
     string Plan,
-    bool EmailConfirmed
+    bool EmailConfirmed,
+    DateTime? PlanExpiresAt = null
 );

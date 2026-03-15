@@ -35,7 +35,7 @@ export class LoginComponent {
       },
       error: (err) => {
         this.loading.set(false);
-        this.error.set(err.error?.message ?? 'Invalid credentials or email not confirmed');
+        this.error.set(err.error?.message ?? 'Unable to sign in. Please check your credentials.');
       }
     });
   }

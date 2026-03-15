@@ -10,6 +10,7 @@ using back.Services.Auth.Email;
 using back.Services.Document;
 using back.Services.Parser;
 using back.Services.Question;
+using back.Services.Regulatory;
 using back.Services.Report;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -34,6 +35,9 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 // Repositories
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
+builder.Services.AddScoped<ILegalReferenceRepository, LegalReferenceRepository>();
+builder.Services.AddScoped<IRegulatoryUpdateRepository, RegulatoryUpdateRepository>();
+builder.Services.AddScoped<IRegulatoryAlertRepository, RegulatoryAlertRepository>();
 
 // Services
 builder.Services.AddScoped<IDocumentParserService, DocumentParserService>();
@@ -41,6 +45,12 @@ builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
 builder.Services.AddScoped<IAIService, OpenAIService>();
 builder.Services.AddScoped<IContractReportPdfService, ContractReportPdfService>();
+
+// Regulatory Alert Services
+builder.Services.AddScoped<ILegalReferenceExtractionService, LegalReferenceExtractionService>();
+builder.Services.AddScoped<IRegulatoryMatchingService, RegulatoryMatchingService>();
+builder.Services.AddScoped<IAlertService, AlertService>();
+builder.Services.AddHostedService<RegulatoryMonitorBackgroundService>();
 
 // WebSocket
 builder.Services.AddSingleton<WebSocketHandler>();

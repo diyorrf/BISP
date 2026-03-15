@@ -1,10 +1,11 @@
 import { Component, signal } from '@angular/core';
-import { LucideAngularModule, Upload, FileText, AlertTriangle, CheckCircle, Info, Download } from 'lucide-angular';
+import { LucideAngularModule, Upload, FileText, AlertTriangle, CheckCircle, Info, Download, Loader, ShieldCheck, CloudUpload } from 'lucide-angular';
 import { DocumentService } from '../../services/document.service';
 import { QuestionService } from '../../services/question.service';
 import { ReportService } from '../../services/report.service';
 
 type RiskLevel = 'high' | 'medium' | 'low';
+type AnalysisPhase = 'idle' | 'uploading' | 'uploaded' | 'analyzing';
 
 interface AnalysisIssue {
   clause: string;
@@ -28,11 +29,13 @@ interface AnalysisResult {
   templateUrl: './contract-scanner.component.html'
 })
 export class ContractScannerComponent {
-  readonly icons = { Upload, FileText, AlertTriangle, CheckCircle, Info, Download };
+  readonly icons = { Upload, FileText, AlertTriangle, CheckCircle, Info, Download, Loader, ShieldCheck, CloudUpload };
 
   selectedFile = signal<File | null>(null);
-  isAnalyzing = signal(false);
+  phase = signal<AnalysisPhase>('idle');
   analysisResult = signal<AnalysisResult | null>(null);
+  isDownloading = signal(false);
+  downloadError = signal<string | null>(null);
 
   constructor(
     private docService: DocumentService,
@@ -45,6 +48,8 @@ export class ContractScannerComponent {
     if (input.files && input.files[0]) {
       this.selectedFile.set(input.files[0]);
       this.analysisResult.set(null);
+      this.phase.set('idle');
+      this.downloadError.set(null);
     }
   }
 
@@ -52,27 +57,58 @@ export class ContractScannerComponent {
     const file = this.selectedFile();
     if (!file) return;
 
-    this.isAnalyzing.set(true);
+    this.phase.set('uploading');
+    this.analysisResult.set(null);
+    this.downloadError.set(null);
+
+    const scannerPrompt = `Analyze this legal document thoroughly for compliance risks under Uzbekistan law. You MUST respond with valid JSON only (no markdown, no code fences). Use this exact structure:
+{
+  "riskLevel": "high" or "medium" or "low",
+  "summary": "A detailed 2-4 sentence overview of the document and its overall compliance status",
+  "issues": [
+    {
+      "clause": "The specific clause or article from the document (e.g. 'Article 5.2 - Overtime Compensation')",
+      "risk": "high" or "medium" or "low",
+      "description": "A detailed explanation of the compliance issue, why it's problematic, and what the practical legal consequences are",
+      "reference": "The specific Uzbekistan law, code, and article number that applies (e.g. 'Labor Code of Uzbekistan, Article 169')"
+    }
+  ],
+  "recommendations": [
+    "Specific, actionable recommendation with reference to the applicable law"
+  ]
+}
+
+Be thorough: identify ALL compliance issues, not just the obvious ones. For each issue, provide a detailed explanation of the legal risk and cite the specific applicable law. Include at least 3-5 detailed recommendations.`;
 
     this.docService.upload(file).subscribe({
       next: (doc) => {
+        this.phase.set('uploaded');
+
+        setTimeout(() => {
+          this.phase.set('analyzing');
+        }, 800);
+
         this.questionService.ask({
           documentId: doc.id,
-          questionText: 'Analyze this legal document for compliance risks under Uzbekistan law. For each issue found, identify the clause, risk level (high/medium/low), description, and legal reference. Also provide recommendations.'
+          questionText: scannerPrompt
         }).subscribe({
           next: (res) => {
-            this.isAnalyzing.set(false);
+            this.phase.set('idle');
             this.parseAnalysisResponse(file.name, res.answer);
           },
-          error: () => {
-            this.isAnalyzing.set(false);
-            this.setMockResult(file.name);
+          error: (err) => {
+            this.phase.set('idle');
+            if (err.status === 402) {
+              this.setFallbackResult(file.name, 'You have used all your tokens for today. To get more tokens, please upgrade your plan or wait until tomorrow.');
+            } else {
+              this.setFallbackResult(file.name, 'Analysis failed. Please try again.');
+            }
           }
         });
       },
       error: () => {
-        this.isAnalyzing.set(false);
-        this.setMockResult(file.name);
+        this.phase.set('idle');
+        this.setFallbackResult(file.name, 'Failed to upload document. Please try again.');
       }
     });
   }
@@ -80,11 +116,16 @@ export class ContractScannerComponent {
   clear(): void {
     this.selectedFile.set(null);
     this.analysisResult.set(null);
+    this.phase.set('idle');
+    this.downloadError.set(null);
   }
 
   downloadReport(): void {
     const result = this.analysisResult();
-    if (!result) return;
+    if (!result || this.isDownloading()) return;
+
+    this.isDownloading.set(true);
+    this.downloadError.set(null);
 
     const payload = {
       fileName: result.fileName,
@@ -101,15 +142,20 @@ export class ContractScannerComponent {
 
     this.reportService.downloadContractScannerPdf(payload).subscribe({
       next: (blob) => {
+        this.isDownloading.set(false);
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = `LegalGuard_Report_${result.fileName.replace(/[^a-z0-9._-]/gi, '_')}.pdf`;
+        a.style.display = 'none';
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
         URL.revokeObjectURL(url);
       },
       error: () => {
-        // Fallback: could show a toast or keep silent
+        this.isDownloading.set(false);
+        this.downloadError.set('Failed to generate the report. Please try again.');
       },
     });
   }
@@ -127,34 +173,51 @@ export class ContractScannerComponent {
     }
   }
 
-  private parseAnalysisResponse(fileName: string, answer: string): void {
-    this.analysisResult.set({
-      fileName,
-      riskLevel: 'medium',
-      summary: answer.substring(0, 300) + (answer.length > 300 ? '...' : ''),
-      issues: [
-        { clause: 'General Compliance', risk: 'medium', description: answer.substring(0, 200), reference: 'Uzbekistan Civil Code' }
-      ],
-      recommendations: ['Review the full AI analysis above for detailed recommendations']
-    });
+  isProcessing(): boolean {
+    return this.phase() !== 'idle';
   }
 
-  private setMockResult(fileName: string): void {
+  private parseAnalysisResponse(fileName: string, answer: string): void {
+    try {
+      let jsonStr = answer.trim();
+      const fenceStart = jsonStr.indexOf('```');
+      if (fenceStart !== -1) {
+        const afterFence = jsonStr.indexOf('\n', fenceStart);
+        const fenceEnd = jsonStr.lastIndexOf('```');
+        if (afterFence !== -1 && fenceEnd > afterFence) {
+          jsonStr = jsonStr.substring(afterFence + 1, fenceEnd).trim();
+        }
+      }
+
+      const parsed = JSON.parse(jsonStr);
+
+      const validRisk = (r: string): RiskLevel =>
+        ['high', 'medium', 'low'].includes(r) ? r as RiskLevel : 'medium';
+
+      this.analysisResult.set({
+        fileName,
+        riskLevel: validRisk(parsed.riskLevel),
+        summary: parsed.summary || 'Analysis complete.',
+        issues: (parsed.issues || []).map((i: any) => ({
+          clause: i.clause || 'Unknown clause',
+          risk: validRisk(i.risk),
+          description: i.description || '',
+          reference: i.reference || ''
+        })),
+        recommendations: parsed.recommendations || []
+      });
+    } catch {
+      this.setFallbackResult(fileName, answer);
+    }
+  }
+
+  private setFallbackResult(fileName: string, rawAnswer: string): void {
     this.analysisResult.set({
       fileName,
       riskLevel: 'medium',
-      summary: 'This document contains standard provisions but has several clauses that require attention regarding overtime compensation and termination procedures.',
-      issues: [
-        { clause: 'Article 5.2 - Overtime Compensation', risk: 'high', description: 'Overtime rate of 1.25x base salary is below the legal minimum requirement of 1.5x as per Labor Code Article 169.', reference: 'Labor Code of Uzbekistan, Article 169' },
-        { clause: 'Article 8.1 - Termination Notice Period', risk: 'medium', description: '7-day notice period is shorter than the standard 14-day requirement for employment contracts.', reference: 'Labor Code of Uzbekistan, Article 78' },
-        { clause: 'Article 3.4 - Probationary Period', risk: 'low', description: '3-month probation period is acceptable but near the upper limit. Ensure proper documentation.', reference: 'Labor Code of Uzbekistan, Article 25' },
-      ],
-      recommendations: [
-        'Increase overtime compensation rate to at least 1.5x base salary to comply with Labor Code Article 169',
-        'Extend termination notice period to 14 days minimum',
-        'Add clear dispute resolution procedures referencing local jurisdiction',
-        'Include mandatory social insurance contributions clause',
-      ],
+      summary: rawAnswer.length > 500 ? rawAnswer.substring(0, 500) + '...' : rawAnswer,
+      issues: [],
+      recommendations: ['The AI response could not be parsed into structured results. Review the summary above for details.']
     });
   }
 }

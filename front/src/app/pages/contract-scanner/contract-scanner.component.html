@@ -19,6 +19,8 @@
         [class.bg-slate-50]="!selectedFile()"
         [class.hover:border-blue-400]="!selectedFile()"
         [class.hover:bg-blue-50]="!selectedFile()"
+        [class.pointer-events-none]="isProcessing()"
+        [class.opacity-60]="isProcessing()"
       >
         <lucide-icon [img]="icons.Upload" [size]="48" class="text-slate-400 mb-4"></lucide-icon>
         @if (selectedFile(); as file) {
@@ -44,14 +46,14 @@
         />
       </label>
 
-      @if (selectedFile()) {
+      @if (selectedFile() && !isProcessing()) {
         <div class="flex gap-3 mt-6">
           <button
             (click)="analyze()"
-            [disabled]="isAnalyzing()"
-            class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed"
+            class="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
           >
-            {{ isAnalyzing() ? 'Analyzing...' : 'Analyze Contract' }}
+            <lucide-icon [img]="icons.ShieldCheck" [size]="20"></lucide-icon>
+            Analyze Contract
           </button>
           <button
             (click)="clear()"
@@ -64,9 +66,120 @@
     </div>
   </div>
 
+  <!-- Processing Status -->
+  @if (isProcessing()) {
+    <div class="bg-white rounded-xl border border-slate-200 p-8">
+      <div class="max-w-md mx-auto">
+        <!-- Step Indicators -->
+        <div class="flex items-center justify-center gap-4 mb-8">
+          <!-- Step 1: Upload -->
+          <div class="flex items-center gap-2">
+            <div
+              class="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500"
+              [class.bg-blue-600]="phase() === 'uploading'"
+              [class.bg-green-500]="phase() === 'uploaded' || phase() === 'analyzing'"
+              [class.animate-pulse]="phase() === 'uploading'"
+            >
+              @if (phase() === 'uploading') {
+                <lucide-icon [img]="icons.CloudUpload" [size]="20" class="text-white"></lucide-icon>
+              } @else {
+                <lucide-icon [img]="icons.CheckCircle" [size]="20" class="text-white"></lucide-icon>
+              }
+            </div>
+            <span
+              class="text-sm font-medium transition-colors"
+              [class.text-blue-700]="phase() === 'uploading'"
+              [class.text-green-700]="phase() === 'uploaded' || phase() === 'analyzing'"
+            >
+              Upload
+            </span>
+          </div>
+
+          <!-- Connector -->
+          <div
+            class="w-12 h-0.5 transition-all duration-500"
+            [class.bg-green-400]="phase() === 'uploaded' || phase() === 'analyzing'"
+            [class.bg-slate-200]="phase() === 'uploading'"
+          ></div>
+
+          <!-- Step 2: Analyze -->
+          <div class="flex items-center gap-2">
+            <div
+              class="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500"
+              [class.bg-blue-600]="phase() === 'analyzing'"
+              [class.bg-slate-200]="phase() === 'uploading'"
+              [class.bg-green-500]="phase() === 'uploaded'"
+              [class.animate-pulse]="phase() === 'analyzing'"
+            >
+              @if (phase() === 'analyzing') {
+                <lucide-icon [img]="icons.Loader" [size]="20" class="text-white animate-spin"></lucide-icon>
+              } @else if (phase() === 'uploaded') {
+                <lucide-icon [img]="icons.CheckCircle" [size]="20" class="text-white"></lucide-icon>
+              } @else {
+                <lucide-icon [img]="icons.ShieldCheck" [size]="20" class="text-slate-400"></lucide-icon>
+              }
+            </div>
+            <span
+              class="text-sm font-medium transition-colors"
+              [class.text-blue-700]="phase() === 'analyzing'"
+              [class.text-slate-400]="phase() === 'uploading'"
+              [class.text-green-700]="phase() === 'uploaded'"
+            >
+              Analyze
+            </span>
+          </div>
+        </div>
+
+        <!-- Status Message -->
+        <div class="text-center space-y-3">
+          @if (phase() === 'uploading') {
+            <div class="flex items-center justify-center gap-3">
+              <div class="relative w-8 h-8">
+                <div class="absolute inset-0 rounded-full border-2 border-blue-200"></div>
+                <div class="absolute inset-0 rounded-full border-2 border-blue-600 border-t-transparent animate-spin"></div>
+              </div>
+              <p class="text-slate-700 font-medium">Uploading document...</p>
+            </div>
+            <p class="text-sm text-slate-500">Securely sending your file to the server</p>
+          }
+
+          @if (phase() === 'uploaded') {
+            <div class="flex items-center justify-center gap-2 text-green-700">
+              <lucide-icon [img]="icons.CheckCircle" [size]="22"></lucide-icon>
+              <p class="font-medium">Document uploaded successfully!</p>
+            </div>
+            <p class="text-sm text-slate-500">Starting AI analysis...</p>
+          }
+
+          @if (phase() === 'analyzing') {
+            <div class="flex items-center justify-center gap-3">
+              <div class="relative w-8 h-8">
+                <div class="absolute inset-0 rounded-full border-2 border-blue-200"></div>
+                <div class="absolute inset-0 rounded-full border-2 border-blue-600 border-t-transparent animate-spin"></div>
+              </div>
+              <p class="text-slate-700 font-medium">AI is analyzing your document...</p>
+            </div>
+            <p class="text-sm text-slate-500">This may take 15-30 seconds depending on document size</p>
+
+            <!-- Animated scanning lines -->
+            <div class="mt-6 mx-auto max-w-xs space-y-2">
+              <div class="h-2 rounded-full bg-slate-100 overflow-hidden">
+                <div class="h-full rounded-full bg-gradient-to-r from-blue-400 via-blue-600 to-blue-400 animate-scanning"></div>
+              </div>
+              <div class="flex justify-between text-xs text-slate-400">
+                <span>Scanning clauses...</span>
+                <span>Checking compliance...</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
   <!-- Analysis Results -->
   @if (analysisResult(); as result) {
-    <div class="space-y-6">
+    <div class="space-y-6 animate-fadeIn">
       <!-- Risk Level Summary -->
       <div class="bg-white rounded-xl border border-slate-200 p-6">
         <div class="flex items-start justify-between mb-4">
@@ -94,53 +207,78 @@
       </div>
 
       <!-- Issues Found -->
-      <div class="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 class="text-lg font-semibold text-slate-900 mb-4">Issues Found</h3>
-        <div class="space-y-4">
-          @for (issue of result.issues; track issue.clause) {
-            <div
-              class="border-l-4 rounded-lg p-4"
-              [class]="getRiskColor(issue.risk).bg + ' ' + getRiskColor(issue.risk).border"
-            >
-              <div class="flex items-start justify-between mb-2">
-                <h4 class="font-semibold text-slate-900">{{ issue.clause }}</h4>
-                <span
-                  class="text-xs px-2 py-1 rounded uppercase font-medium"
-                  [class]="getRiskColor(issue.risk).bg + ' ' + getRiskColor(issue.risk).text"
-                >
-                  {{ issue.risk }}
-                </span>
+      @if (result.issues.length > 0) {
+        <div class="bg-white rounded-xl border border-slate-200 p-6">
+          <h3 class="text-lg font-semibold text-slate-900 mb-4">Issues Found ({{ result.issues.length }})</h3>
+          <div class="space-y-4">
+            @for (issue of result.issues; track issue.clause) {
+              <div
+                class="border-l-4 rounded-lg p-4"
+                [class]="getRiskColor(issue.risk).bg + ' ' + getRiskColor(issue.risk).border"
+              >
+                <div class="flex items-start justify-between mb-2">
+                  <h4 class="font-semibold text-slate-900">{{ issue.clause }}</h4>
+                  <span
+                    class="text-xs px-2 py-1 rounded uppercase font-medium shrink-0 ml-3"
+                    [class]="getRiskColor(issue.risk).bg + ' ' + getRiskColor(issue.risk).text"
+                  >
+                    {{ issue.risk }}
+                  </span>
+                </div>
+                <p class="text-slate-700 mb-2">{{ issue.description }}</p>
+                @if (issue.reference) {
+                  <p class="text-sm text-slate-600 italic">Reference: {{ issue.reference }}</p>
+                }
               </div>
-              <p class="text-slate-700 mb-2">{{ issue.description }}</p>
-              <p class="text-sm text-slate-600 italic">Reference: {{ issue.reference }}</p>
-            </div>
-          }
+            }
+          </div>
         </div>
-      </div>
+      }
 
       <!-- Recommendations -->
-      <div class="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 class="text-lg font-semibold text-slate-900 mb-4">Recommendations</h3>
-        <ul class="space-y-3">
-          @for (rec of result.recommendations; track rec) {
-            <li class="flex gap-3">
-              <lucide-icon [img]="icons.CheckCircle" [size]="20" class="text-green-600 flex-shrink-0 mt-0.5"></lucide-icon>
-              <span class="text-slate-700">{{ rec }}</span>
-            </li>
-          }
-        </ul>
-      </div>
+      @if (result.recommendations.length > 0) {
+        <div class="bg-white rounded-xl border border-slate-200 p-6">
+          <h3 class="text-lg font-semibold text-slate-900 mb-4">Recommendations</h3>
+          <ul class="space-y-3">
+            @for (rec of result.recommendations; track rec) {
+              <li class="flex gap-3">
+                <lucide-icon [img]="icons.CheckCircle" [size]="20" class="text-green-600 flex-shrink-0 mt-0.5"></lucide-icon>
+                <span class="text-slate-700">{{ rec }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+      }
 
       <!-- Actions -->
-      <div class="flex gap-3">
+      <div class="flex flex-col sm:flex-row gap-3">
         <button
           (click)="downloadReport()"
-          class="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+          [disabled]="isDownloading()"
+          class="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed"
         >
-          <lucide-icon [img]="icons.Download" [size]="20"></lucide-icon>
-          Download Report
+          @if (isDownloading()) {
+            <lucide-icon [img]="icons.Loader" [size]="20" class="animate-spin"></lucide-icon>
+            Generating PDF...
+          } @else {
+            <lucide-icon [img]="icons.Download" [size]="20"></lucide-icon>
+            Download Report
+          }
+        </button>
+        <button
+          (click)="clear()"
+          class="flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors"
+        >
+          Scan Another Document
         </button>
       </div>
+
+      <!-- Download Error -->
+      @if (downloadError()) {
+        <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {{ downloadError() }}
+        </div>
+      }
     </div>
   }
 </div>

@@ -15,9 +15,15 @@ namespace back.Models.DTOs
         DateTime UploadedAt
     );
 
+    public record ChatMessageDto(
+        string Role,
+        string Content
+    );
+
     public record QuestionRequestDto(
         Guid DocumentId,
-        string QuestionText
+        string QuestionText,
+        List<ChatMessageDto>? History = null
     );
 
     public record QuestionResponseDto(

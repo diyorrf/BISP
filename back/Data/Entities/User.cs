@@ -28,10 +28,9 @@ namespace back.Data.Entities
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
 
-        /// <summary>Remaining tokens/credits for AI usage. Refreshed per plan.</summary>
-        public int TokensRemaining { get; set; } = 10_000;
+        public int TokensRemaining { get; set; } = 25_000;
+        public DateTime? LastTokenResetAt { get; set; }
 
-        /// <summary>Plan name: Free, Pro, Enterprise.</summary>
         [MaxLength(50)]
         public string Plan { get; set; } = "Free";
 

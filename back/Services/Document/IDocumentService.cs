@@ -13,5 +13,6 @@ namespace back.Services.Document
         Task<DocumentDetailDto?> GetDocumentDetailAsync(Guid id, long userId, CancellationToken ct = default);
         Task<IEnumerable<DocumentDto>> GetAllDocumentsAsync(long userId, CancellationToken ct = default);
         Task<bool> DeleteDocumentAsync(Guid id, long userId, CancellationToken ct = default);
+        string? GetStoragePath(string? storedFileName);
     }
 }

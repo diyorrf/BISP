@@ -8,6 +8,11 @@ export interface RegisterRequest {
   password: string;
 }
 
+export interface VerifyCodeRequest {
+  email: string;
+  code: string;
+}
+
 export interface AuthResponse {
   success: boolean;
   token?: string;

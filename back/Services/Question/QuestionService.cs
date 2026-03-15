@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using back.Data.Repos.Interfaces;
+using back.Models;
 using back.Models.DTOs;
 using back.Services.AI;
 using QuestionEntity = back.Data.Entities.Question;
@@ -36,6 +37,8 @@ namespace back.Services.Question
 
         public async Task<QuestionResponseDto> AskQuestionAsync(QuestionRequestDto request, long userId, CancellationToken ct = default)
         {
+            await EnsureTokensAvailableAsync(userId);
+
             var document = await _documentRepository.GetByIdAndUserIdAsync(request.DocumentId, userId, ct);
             
             if (document == null)
@@ -54,7 +57,7 @@ namespace back.Services.Question
             
             try
             {
-                var answer = await _aiService.GetAnswerAsync(document.Content, request.QuestionText, ct);
+                var answer = await _aiService.GetAnswerAsync(document.Content, request.QuestionText, request.History, ct);
                 
                 sw.Stop();
 
@@ -89,6 +92,8 @@ namespace back.Services.Question
             long userId,
             [EnumeratorCancellation] CancellationToken ct = default)
         {
+            await EnsureTokensAvailableAsync(userId);
+
             var document = await _documentRepository.GetByIdAndUserIdAsync(request.DocumentId, userId, ct);
             
             if (document == null)
@@ -106,7 +111,7 @@ namespace back.Services.Question
             var sw = Stopwatch.StartNew();
             var fullAnswer = new StringBuilder();
 
-            await foreach (var chunk in _aiService.GetAnswerStreamAsync(document.Content, request.QuestionText, ct))
+            await foreach (var chunk in _aiService.GetAnswerStreamAsync(document.Content, request.QuestionText, request.History, ct))
             {
                 fullAnswer.Append(chunk);
                 yield return new StreamChunkDto(chunk, false);
@@ -129,6 +134,36 @@ namespace back.Services.Question
             yield return new StreamChunkDto(string.Empty, true);
         }
 
+        private static int GetDailyAllowance(string plan) => plan switch
+        {
+            "Pro" => 100_000,
+            "Enterprise" => 500_000,
+            _ => 25_000
+        };
+
+        private async Task EnsureTokensAvailableAsync(long userId)
+        {
+            var user = await _userRepository.GetByIdAsync(userId)
+                ?? throw new ArgumentException("User not found");
+
+            var todayUtc = DateTime.UtcNow.Date;
+            var lastReset = user.LastTokenResetAt?.Date;
+            var allowance = GetDailyAllowance(user.Plan);
+
+            if (lastReset == null || lastReset < todayUtc)
+            {
+                user.TokensRemaining = allowance;
+                user.LastTokenResetAt = DateTime.UtcNow;
+                await _userRepository.UpdateAsync(user);
+                _logger.LogInformation("Daily token reset for user {UserId} ({Plan}): {Tokens} tokens",
+                    userId, user.Plan, allowance);
+                return;
+            }
+
+            if (user.TokensRemaining <= 0)
+                throw new InsufficientTokensException();
+        }
+
         private async Task DecrementUserTokensAsync(long userId, int tokensUsed)
         {
             var user = await _userRepository.GetByIdAsync(userId);
@@ -141,7 +176,6 @@ namespace back.Services.Question
 
         private static int EstimateTokens(string text)
         {
-            // Rough estimation: ~4 characters per token
             return text.Length / 4;
         }
     }

@@ -24,7 +24,13 @@ export class QuestionService {
     };
 
     ws.onmessage = (event) => {
-      const chunk: StreamChunk = JSON.parse(event.data);
+      const data = JSON.parse(event.data);
+      if (data.error) {
+        ws.close();
+        subject.error({ message: data.error, code: data.code });
+        return;
+      }
+      const chunk: StreamChunk = data;
       subject.next(chunk);
       if (chunk.isComplete) {
         ws.close();

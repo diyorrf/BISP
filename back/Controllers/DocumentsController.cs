@@ -85,6 +85,26 @@ namespace back.Controllers
             return Ok(documents);
         }
 
+        [HttpGet("{id:guid}/download")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DownloadDocument(Guid id, CancellationToken ct)
+        {
+            if (UserId is not { } userId)
+                return Unauthorized();
+
+            var detail = await _documentService.GetDocumentDetailAsync(id, userId, ct);
+            if (detail == null)
+                return NotFound();
+
+            var filePath = _documentService.GetStoragePath(detail.StoredFileName);
+            if (filePath == null)
+                return NotFound("File not found on server");
+
+            var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+            return File(stream, detail.ContentType, detail.FileName);
+        }
+
         [HttpDelete("{id:guid}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
