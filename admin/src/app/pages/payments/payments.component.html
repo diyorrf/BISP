@@ -1,0 +1,54 @@
+<div>
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-slate-900">Payments</h1>
+    @if (!loading()) {
+      <div class="text-sm text-slate-500">
+        {{ payments().length }} transactions &middot; Total: <span class="font-semibold text-slate-900">${{ totalRevenue().toFixed(2) }}</span>
+      </div>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="text-slate-500">Loading payments...</div>
+  } @else {
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <table class="w-full">
+        <thead class="bg-slate-50 border-b border-slate-200">
+          <tr>
+            <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">User</th>
+            <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Plan</th>
+            <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Amount</th>
+            <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Method</th>
+            <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+            <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Date</th>
+            <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Expires</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          @for (pay of payments(); track pay.id) {
+            <tr class="hover:bg-slate-50 transition-colors">
+              <td class="px-5 py-4 text-sm text-slate-900">{{ pay.userEmail || 'User #' + pay.userId }}</td>
+              <td class="px-5 py-4">
+                <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium" [class]="planBadgeClass(pay.plan)">
+                  {{ pay.plan }}
+                </span>
+              </td>
+              <td class="px-5 py-4 text-sm font-medium text-slate-900">${{ pay.amount.toFixed(2) }} {{ pay.currency }}</td>
+              <td class="px-5 py-4 text-sm text-slate-500">{{ pay.paymentMethod }}</td>
+              <td class="px-5 py-4">
+                <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">{{ pay.status }}</span>
+              </td>
+              <td class="px-5 py-4 text-sm text-slate-500">{{ formatDate(pay.createdAt) }}</td>
+              <td class="px-5 py-4 text-sm text-slate-500">{{ pay.planExpiresAt ? formatDate(pay.planExpiresAt) : 'N/A' }}</td>
+            </tr>
+          }
+          @if (payments().length === 0) {
+            <tr>
+              <td colspan="7" class="px-5 py-8 text-center text-sm text-slate-500">No payments recorded yet.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

@@ -125,6 +125,11 @@ namespace back.Data
                     .HasForeignKey(e => e.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
+
+            modelBuilder.Entity<Role>().HasData(
+                new Role { Id = 1, Code = "Admin", Name = "Administrator", Description = "Full system access", CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new Role { Id = 2, Code = "User", Name = "User", Description = "Regular user", CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
+            );
         }
     }
 }

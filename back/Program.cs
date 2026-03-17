@@ -95,7 +95,10 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+});
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -121,6 +124,26 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
+
+    var adminEmail = builder.Configuration["AdminSettings:Email"];
+    if (!string.IsNullOrEmpty(adminEmail))
+    {
+        var adminUser = db.Users.FirstOrDefault(u => u.Email == adminEmail);
+        if (adminUser != null)
+        {
+            var alreadyAdmin = db.UserRoles.Any(ur => ur.UserId == adminUser.Id && ur.RoleId == 1);
+            if (!alreadyAdmin)
+            {
+                db.UserRoles.Add(new back.Data.Entities.UserRole
+                {
+                    UserId = adminUser.Id,
+                    RoleId = 1,
+                    AssignedAt = DateTime.UtcNow
+                });
+                db.SaveChanges();
+            }
+        }
+    }
 }
 
 // =======================

@@ -24,6 +24,8 @@ namespace back.Data.Repos
         {
             return await _context.EmailConfirmationTokens
                 .Include(t => t.User)
+                    .ThenInclude(u => u.UserRoles)
+                        .ThenInclude(ur => ur.Role)
                 .FirstOrDefaultAsync(t => t.Token == token);
         }
 
@@ -31,6 +33,8 @@ namespace back.Data.Repos
         {
             return await _context.EmailConfirmationTokens
                 .Include(t => t.User)
+                    .ThenInclude(u => u.UserRoles)
+                        .ThenInclude(ur => ur.Role)
                 .FirstOrDefaultAsync(t => t.UserId == userId);
         }
 

@@ -149,11 +149,21 @@ namespace back.Services.Auth
         }
         private string GenerateJwtToken(User user)
         {
-            var claims = new[]
+            var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new(JwtRegisteredClaimNames.Email, user.Email),
             };
+
+            if (user.UserRoles?.Any() == true)
+            {
+                foreach (var ur in user.UserRoles)
+                {
+                    var roleName = ur.Role?.Code ?? ur.Role?.Name;
+                    if (!string.IsNullOrEmpty(roleName))
+                        claims.Add(new Claim(ClaimTypes.Role, roleName));
+                }
+            }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

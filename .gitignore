@@ -29,3 +29,8 @@ node_modules/
 /front/.env.development
 /front/.env.production
 
+# Angular (admin)
+/admin/node_modules/
+/admin/dist/
+/admin/.angular/cache/
+

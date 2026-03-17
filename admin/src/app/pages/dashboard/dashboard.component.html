@@ -1,0 +1,94 @@
+<div>
+  <h1 class="text-2xl font-bold text-slate-900 mb-6">Dashboard</h1>
+
+  @if (loading()) {
+    <div class="text-slate-500">Loading stats...</div>
+  } @else if (stats(); as s) {
+    <!-- Stat cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+            <lucide-icon [img]="icons.Users" [size]="20" class="text-blue-600"></lucide-icon>
+          </div>
+          <span class="text-sm font-medium text-slate-500">Total Users</span>
+        </div>
+        <p class="text-3xl font-bold text-slate-900">{{ s.totalUsers }}</p>
+        <p class="text-xs text-slate-400 mt-1">{{ s.activeUsers }} active</p>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+            <lucide-icon [img]="icons.FileText" [size]="20" class="text-green-600"></lucide-icon>
+          </div>
+          <span class="text-sm font-medium text-slate-500">Documents</span>
+        </div>
+        <p class="text-3xl font-bold text-slate-900">{{ s.totalDocuments }}</p>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+            <lucide-icon [img]="icons.MessageSquare" [size]="20" class="text-purple-600"></lucide-icon>
+          </div>
+          <span class="text-sm font-medium text-slate-500">Questions Asked</span>
+        </div>
+        <p class="text-3xl font-bold text-slate-900">{{ s.totalQuestions }}</p>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+            <lucide-icon [img]="icons.CreditCard" [size]="20" class="text-yellow-600"></lucide-icon>
+          </div>
+          <span class="text-sm font-medium text-slate-500">Revenue</span>
+        </div>
+        <p class="text-3xl font-bold text-slate-900">${{ s.totalRevenue.toFixed(2) }}</p>
+        <p class="text-xs text-slate-400 mt-1">{{ s.totalPayments }} payments</p>
+      </div>
+    </div>
+
+    <!-- Second row -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+      <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+            <lucide-icon [img]="icons.Bell" [size]="20" class="text-orange-600"></lucide-icon>
+          </div>
+          <span class="text-sm font-medium text-slate-500">Alerts</span>
+        </div>
+        <p class="text-3xl font-bold text-slate-900">{{ s.totalAlerts }}</p>
+        <p class="text-xs text-slate-400 mt-1">{{ s.unreadAlerts }} unread</p>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+            <lucide-icon [img]="icons.AlertTriangle" [size]="20" class="text-red-600"></lucide-icon>
+          </div>
+          <span class="text-sm font-medium text-slate-500">Regulatory Updates</span>
+        </div>
+        <p class="text-3xl font-bold text-slate-900">{{ s.regulatoryUpdatesTotal }}</p>
+        <p class="text-xs text-slate-400 mt-1">{{ s.regulatoryUpdatesPending }} pending</p>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+            <lucide-icon [img]="icons.Activity" [size]="20" class="text-indigo-600"></lucide-icon>
+          </div>
+          <span class="text-sm font-medium text-slate-500">Plan Breakdown</span>
+        </div>
+        <div class="space-y-2">
+          @for (plan of planKeys(); track plan) {
+            <div class="flex justify-between items-center">
+              <span class="text-sm text-slate-600">{{ plan }}</span>
+              <span class="text-sm font-semibold text-slate-900 bg-slate-100 px-2 py-0.5 rounded">{{ s.planBreakdown[plan] }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+@source "./**/*.html";
+@source "./**/*.ts";
+
+@layer base {
+  * {
+    @apply border-slate-200;
+  }
+  body {
+    @apply bg-slate-100 text-slate-900 antialiased;
+  }
+}

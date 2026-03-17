@@ -1,0 +1,78 @@
+<div>
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-slate-900">Users</h1>
+    <div class="relative">
+      <lucide-icon [img]="icons.Search" [size]="18" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></lucide-icon>
+      <input
+        type="text"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+        placeholder="Search users..."
+        class="pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 w-72"
+      />
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="text-slate-500">Loading users...</div>
+  } @else {
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <table class="w-full">
+        <thead class="bg-slate-50 border-b border-slate-200">
+          <tr>
+            <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">User</th>
+            <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Plan</th>
+            <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Docs</th>
+            <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Questions</th>
+            <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Tokens</th>
+            <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Last Login</th>
+            <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+            <th class="text-right px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          @for (user of filtered(); track user.id) {
+            <tr class="hover:bg-slate-50 transition-colors">
+              <td class="px-5 py-4">
+                <div>
+                  <p class="text-sm font-medium text-slate-900">{{ user.fullName || 'No name' }}</p>
+                  <p class="text-xs text-slate-500">{{ user.email }}</p>
+                </div>
+              </td>
+              <td class="px-5 py-4">
+                <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium" [class]="planBadgeClass(user.plan)">
+                  {{ user.plan }}
+                </span>
+              </td>
+              <td class="px-5 py-4 text-sm text-slate-600">{{ user.documentsCount }}</td>
+              <td class="px-5 py-4 text-sm text-slate-600">{{ user.questionsCount }}</td>
+              <td class="px-5 py-4 text-sm text-slate-600">{{ user.tokensRemaining | number }}</td>
+              <td class="px-5 py-4 text-sm text-slate-500">{{ formatDate(user.lastLoginAt) }}</td>
+              <td class="px-5 py-4">
+                @if (user.isActive) {
+                  <span class="inline-flex items-center gap-1 text-xs text-green-700 bg-green-100 px-2 py-0.5 rounded-full">Active</span>
+                } @else {
+                  <span class="inline-flex items-center gap-1 text-xs text-red-700 bg-red-100 px-2 py-0.5 rounded-full">Inactive</span>
+                }
+              </td>
+              <td class="px-5 py-4 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <a [routerLink]="['/users', user.id]" class="p-1.5 hover:bg-slate-100 rounded-lg transition-colors" title="View details">
+                    <lucide-icon [img]="icons.Eye" [size]="16" class="text-slate-500"></lucide-icon>
+                  </a>
+                  <button (click)="toggleActive(user)" class="p-1.5 hover:bg-slate-100 rounded-lg transition-colors" [title]="user.isActive ? 'Deactivate' : 'Activate'">
+                    @if (user.isActive) {
+                      <lucide-icon [img]="icons.UserX" [size]="16" class="text-red-500"></lucide-icon>
+                    } @else {
+                      <lucide-icon [img]="icons.UserCheck" [size]="16" class="text-green-500"></lucide-icon>
+                    }
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
