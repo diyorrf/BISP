@@ -1,0 +1,10 @@
+bin/
+obj/
+.vs/
+Storage/
+Dockerfile
+.dockerignore
+appsettings.Development.json
+appsettings.Local.json
+*.user
+*.suo

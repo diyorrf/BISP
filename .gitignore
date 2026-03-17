@@ -1,6 +1,7 @@
 # Global ignores
 node_modules/
 .vscode/
+.env
 
 *.sln
 
@@ -16,6 +17,7 @@ node_modules/
 /back/wwwroot/lib/
 /back/Properties/launchSettings.json
 /back/Storage/
+/back/Migrations/
 
 
 # Angular (front)

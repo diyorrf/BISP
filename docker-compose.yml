@@ -7,7 +7,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: LegalGuard
     ports:
       - "5432:5432"
@@ -26,14 +26,27 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    ports:
-      - "5041:5000"
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:5000
-      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=LegalGuard;Username=postgres;Password=postgres"
-    # Override appsettings connection when running in Docker:
-    # backend uses Host=db to reach the db container
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=LegalGuard;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres}"
+      JwtSettings__SecretKey: "${JWT_SECRET_KEY:-ccce251c64ea0948734142cd23926ed68d2c27f0f7c3f004002e3fdcd4eab0d2}"
+      JwtSettings__Issuer: "LegalGuard"
+      JwtSettings__Audience: "LegalGuardUsers"
+      JwtSettings__ExpirationMinutes: "60"
+      OpenAI__ApiKey: "${OPENAI_API_KEY}"
+      OpenAI__ChatModel: "${OPENAI_CHAT_MODEL:-gpt-4.1-mini}"
+      OpenAI__EmbeddingModel: "${OPENAI_EMBEDDING_MODEL:-text-embedding-3-large}"
+      EmailSettings__Host: "${EMAIL_HOST:-smtp.gmail.com}"
+      EmailSettings__Port: "${EMAIL_PORT:-587}"
+      EmailSettings__SenderEmail: "${EMAIL_SENDER:-th1nkerldm@gmail.com}"
+      EmailSettings__SenderName: "Legal Guard"
+      EmailSettings__Username: "${EMAIL_USERNAME:-th1nkerldm@gmail.com}"
+      EmailSettings__Password: "${EMAIL_PASSWORD}"
+    volumes:
+      - backend-storage:/app/Storage
+    expose:
+      - "5000"
 
   frontend:
     build: ./front
@@ -42,8 +55,8 @@ services:
     depends_on:
       - backend
     ports:
-      - "4200:4200"
-    # Frontend app (browser) calls API at http://localhost:5041 when user opens http://localhost:4200
+      - "4200:80"
 
 volumes:
   pgdata:
+  backend-storage:
