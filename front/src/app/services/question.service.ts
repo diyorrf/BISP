@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { QuestionRequest, QuestionResponse, StreamChunk } from '../models/question.model';
+import { QuestionRequest, QuestionResponse, StreamChunk, ChatHistoryItem } from '../models/question.model';
 
 @Injectable({ providedIn: 'root' })
 export class QuestionService {
@@ -12,6 +12,10 @@ export class QuestionService {
 
   ask(request: QuestionRequest): Observable<QuestionResponse> {
     return this.http.post<QuestionResponse>(this.url, request);
+  }
+
+  getChatHistory(documentId: string): Observable<ChatHistoryItem[]> {
+    return this.http.get<ChatHistoryItem[]>(`${this.url}/document/${documentId}`);
   }
 
   askStream(request: QuestionRequest): Observable<StreamChunk> {

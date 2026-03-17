@@ -10,6 +10,7 @@ namespace back.Data.Repos.Interfaces
     {
         Task<Question?> GetByIdAsync(Guid id, CancellationToken ct = default);
         Task<IEnumerable<Question>> GetByDocumentIdAsync(Guid documentId, CancellationToken ct = default);
+        Task<IEnumerable<Question>> GetByDocumentIdAndUserIdAsync(Guid documentId, long userId, CancellationToken ct = default);
         Task<IEnumerable<Question>> GetAllAsync(CancellationToken ct = default);
         Task<int> GetCountAsync(CancellationToken ct = default);
         Task<int> GetCountByUserIdAsync(long userId, CancellationToken ct = default);

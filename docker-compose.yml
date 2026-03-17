@@ -7,7 +7,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: LegalGuard
     ports:
       - "5432:5432"
@@ -29,20 +29,20 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:5000
-      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=LegalGuard;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres}"
-      JwtSettings__SecretKey: "${JWT_SECRET_KEY:-ccce251c64ea0948734142cd23926ed68d2c27f0f7c3f004002e3fdcd4eab0d2}"
-      JwtSettings__Issuer: "LegalGuard"
-      JwtSettings__Audience: "LegalGuardUsers"
-      JwtSettings__ExpirationMinutes: "60"
-      OpenAI__ApiKey: "${OPENAI_API_KEY}"
-      OpenAI__ChatModel: "${OPENAI_CHAT_MODEL:-gpt-4.1-mini}"
-      OpenAI__EmbeddingModel: "${OPENAI_EMBEDDING_MODEL:-text-embedding-3-large}"
-      EmailSettings__Host: "${EMAIL_HOST:-smtp.gmail.com}"
-      EmailSettings__Port: "${EMAIL_PORT:-587}"
-      EmailSettings__SenderEmail: "${EMAIL_SENDER:-th1nkerldm@gmail.com}"
-      EmailSettings__SenderName: "Legal Guard"
-      EmailSettings__Username: "${EMAIL_USERNAME:-th1nkerldm@gmail.com}"
-      EmailSettings__Password: "${EMAIL_PASSWORD}"
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=LegalGuard;Username=postgres;Password=${POSTGRES_PASSWORD}"
+      JwtSettings__SecretKey: ${JWT_SECRET_KEY}
+      JwtSettings__Issuer: LegalGuard
+      JwtSettings__Audience: LegalGuardUsers
+      JwtSettings__ExpirationMinutes: 60
+      OpenAI__ApiKey: ${OPENAI_API_KEY}
+      OpenAI__ChatModel: ${OPENAI_CHAT_MODEL}
+      OpenAI__EmbeddingModel: ${OPENAI_EMBEDDING_MODEL}
+      EmailSettings__Host: ${EMAIL_HOST}
+      EmailSettings__Port: ${EMAIL_PORT}
+      EmailSettings__SenderEmail: ${EMAIL_SENDER}
+      EmailSettings__SenderName: Legal Guard
+      EmailSettings__Username: ${EMAIL_USERNAME}
+      EmailSettings__Password: ${EMAIL_PASSWORD}
     volumes:
       - backend-storage:/app/Storage
     expose:

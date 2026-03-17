@@ -1,3 +1,4 @@
+using back.Data.Repos.Interfaces;
 using back.Extensions;
 using back.Models;
 using back.Models.DTOs;
@@ -13,15 +14,39 @@ namespace back.Controllers
     public class QuestionsController : ControllerBase
     {
         private readonly IQuestionService _questionService;
+        private readonly IQuestionRepository _questionRepository;
         private readonly ILogger<QuestionsController> _logger;
 
-        public QuestionsController(IQuestionService questionService, ILogger<QuestionsController> logger)
+        public QuestionsController(
+            IQuestionService questionService,
+            IQuestionRepository questionRepository,
+            ILogger<QuestionsController> logger)
         {
             _questionService = questionService;
+            _questionRepository = questionRepository;
             _logger = logger;
         }
 
         private long? UserId => User.GetUserId();
+
+        [HttpGet("document/{documentId:guid}")]
+        [ProducesResponseType(typeof(IEnumerable<ChatHistoryItemDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetChatHistory(Guid documentId, CancellationToken ct)
+        {
+            if (UserId is not { } userId)
+                return Unauthorized();
+
+            var questions = await _questionRepository.GetByDocumentIdAndUserIdAsync(documentId, userId, ct);
+            var history = questions.Select(q => new ChatHistoryItemDto(
+                q.Id,
+                q.QuestionText,
+                q.Answer ?? "",
+                q.AskedAt,
+                q.AnsweredAt
+            ));
+
+            return Ok(history);
+        }
 
         [HttpPost]
         [ProducesResponseType(typeof(QuestionResponseDto), StatusCodes.Status200OK)]

@@ -20,3 +20,11 @@ export interface StreamChunk {
   content: string;
   isComplete: boolean;
 }
+
+export interface ChatHistoryItem {
+  id: string;
+  questionText: string;
+  answer: string;
+  askedAt: string;
+  answeredAt: string | null;
+}

@@ -30,6 +30,14 @@ namespace back.Data.Repos
                 .ToListAsync(ct);
         }
 
+        public async Task<IEnumerable<Question>> GetByDocumentIdAndUserIdAsync(Guid documentId, long userId, CancellationToken ct = default)
+        {
+            return await _context.Questions
+                .Where(q => q.DocumentId == documentId && q.UserId == userId)
+                .OrderBy(q => q.AskedAt)
+                .ToListAsync(ct);
+        }
+
         public async Task<IEnumerable<Question>> GetAllAsync(CancellationToken ct = default)
         {
             return await _context.Questions

@@ -37,4 +37,12 @@ namespace back.Models.DTOs
         string Content,
         bool IsComplete
     );
+
+    public record ChatHistoryItemDto(
+        Guid Id,
+        string QuestionText,
+        string Answer,
+        DateTime AskedAt,
+        DateTime? AnsweredAt
+    );
 }
