@@ -17,7 +17,6 @@ node_modules/
 /back/wwwroot/lib/
 /back/Properties/launchSettings.json
 /back/Storage/
-/back/Migrations/
 
 
 # Angular (front)

@@ -125,24 +125,31 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
 
-    var adminEmail = builder.Configuration["AdminSettings:Email"];
-    if (!string.IsNullOrEmpty(adminEmail))
+    try
     {
-        var adminUser = db.Users.FirstOrDefault(u => u.Email == adminEmail);
-        if (adminUser != null)
+        var adminEmail = builder.Configuration["AdminSettings:Email"];
+        if (!string.IsNullOrEmpty(adminEmail))
         {
-            var alreadyAdmin = db.UserRoles.Any(ur => ur.UserId == adminUser.Id && ur.RoleId == 1);
-            if (!alreadyAdmin)
+            var adminUser = db.Users.FirstOrDefault(u => u.Email == adminEmail);
+            if (adminUser != null)
             {
-                db.UserRoles.Add(new back.Data.Entities.UserRole
+                var alreadyAdmin = db.UserRoles.Any(ur => ur.UserId == adminUser.Id && ur.RoleId == 1);
+                if (!alreadyAdmin)
                 {
-                    UserId = adminUser.Id,
-                    RoleId = 1,
-                    AssignedAt = DateTime.UtcNow
-                });
-                db.SaveChanges();
+                    db.UserRoles.Add(new back.Data.Entities.UserRole
+                    {
+                        UserId = adminUser.Id,
+                        RoleId = 1,
+                        AssignedAt = DateTime.UtcNow
+                    });
+                    db.SaveChanges();
+                }
             }
         }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Admin seed skipped: {ex.Message}");
     }
 }
 
