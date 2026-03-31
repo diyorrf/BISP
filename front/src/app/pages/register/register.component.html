@@ -79,15 +79,22 @@
                 <lucide-icon [img]="icons.Lock" [size]="18" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10"></lucide-icon>
                 <input
                   id="password"
-                  type="password"
+                  [type]="showPassword ? 'text' : 'password'"
                   [(ngModel)]="password"
                   name="password"
                   placeholder="At least 6 characters"
                   required
                   minlength="6"
                   autocomplete="new-password"
-                  class="w-full pl-12 pr-4 py-3 bg-slate-50/80 border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-colors"
+                  class="w-full pl-12 pr-12 py-3 bg-slate-50/80 border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-colors"
                 />
+                <button
+                  type="button"
+                  (click)="showPassword = !showPassword"
+                  class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors z-10"
+                >
+                  <lucide-icon [img]="showPassword ? icons.EyeOff : icons.Eye" [size]="18"></lucide-icon>
+                </button>
               </div>
             </div>
 
@@ -97,14 +104,21 @@
                 <lucide-icon [img]="icons.Lock" [size]="18" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10"></lucide-icon>
                 <input
                   id="confirmPassword"
-                  type="password"
+                  [type]="showConfirmPassword ? 'text' : 'password'"
                   [(ngModel)]="confirmPassword"
                   name="confirmPassword"
                   placeholder="••••••••"
                   required
                   autocomplete="new-password"
-                  class="w-full pl-12 pr-4 py-3 bg-slate-50/80 border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-colors"
+                  class="w-full pl-12 pr-12 py-3 bg-slate-50/80 border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-colors"
                 />
+                <button
+                  type="button"
+                  (click)="showConfirmPassword = !showConfirmPassword"
+                  class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors z-10"
+                >
+                  <lucide-icon [img]="showConfirmPassword ? icons.EyeOff : icons.Eye" [size]="18"></lucide-icon>
+                </button>
               </div>
             </div>
 

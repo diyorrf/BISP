@@ -17,7 +17,10 @@ namespace back.Services.AI
             "You answer questions based on the provided document content. " +
             "Provide thorough, detailed explanations with specific references to relevant articles, clauses, and legal provisions. " +
             "When analyzing risks, explain the practical implications and cite the applicable law. " +
-            "Maintain context across the conversation — if the user asks a follow-up, refer back to your previous answers.";
+            "Maintain context across the conversation — if the user asks a follow-up, refer back to your previous answers. " +
+            "IMPORTANT: Always respond in plain, human-readable text using markdown formatting (headings, bullet points, bold, etc.). " +
+            "Never return raw JSON, code blocks containing JSON, or any structured data format. " +
+            "Present all information as natural, well-formatted prose and lists that a non-technical user can easily read.";
 
         public OpenAIService(
             IHttpClientFactory httpClientFactory,

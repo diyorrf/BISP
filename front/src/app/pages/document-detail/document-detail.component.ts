@@ -6,6 +6,7 @@ import { LucideAngularModule, FileText, Calendar, HardDrive, MessageSquare, Send
 import { DocumentService } from '../../services/document.service';
 import { QuestionService } from '../../services/question.service';
 import { DocumentDetailDto } from '../../models/document.model';
+import { MarkdownPipe } from '../../pipes/markdown.pipe';
 
 interface ChatMessage {
   id: string;
@@ -17,7 +18,7 @@ interface ChatMessage {
 @Component({
   selector: 'app-document-detail',
   standalone: true,
-  imports: [RouterLink, FormsModule, DatePipe, LucideAngularModule],
+  imports: [RouterLink, FormsModule, DatePipe, LucideAngularModule, MarkdownPipe],
   templateUrl: './document-detail.component.html'
 })
 export class DocumentDetailComponent implements OnInit {

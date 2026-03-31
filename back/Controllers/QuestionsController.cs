@@ -29,6 +29,14 @@ namespace back.Controllers
 
         private long? UserId => User.GetUserId();
 
+        private static bool IsScannerPrompt(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return false;
+            return text.Contains("You MUST respond with valid JSON only", StringComparison.OrdinalIgnoreCase)
+                || (text.Contains("Analyze this legal document", StringComparison.OrdinalIgnoreCase)
+                    && text.Contains("\"riskLevel\"", StringComparison.Ordinal));
+        }
+
         [HttpGet("document/{documentId:guid}")]
         [ProducesResponseType(typeof(IEnumerable<ChatHistoryItemDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetChatHistory(Guid documentId, CancellationToken ct)
@@ -37,13 +45,15 @@ namespace back.Controllers
                 return Unauthorized();
 
             var questions = await _questionRepository.GetByDocumentIdAndUserIdAsync(documentId, userId, ct);
-            var history = questions.Select(q => new ChatHistoryItemDto(
-                q.Id,
-                q.QuestionText,
-                q.Answer ?? "",
-                q.AskedAt,
-                q.AnsweredAt
-            ));
+            var history = questions
+                .Where(q => !IsScannerPrompt(q.QuestionText))
+                .Select(q => new ChatHistoryItemDto(
+                    q.Id,
+                    q.QuestionText,
+                    q.Answer ?? "",
+                    q.AskedAt,
+                    q.AnsweredAt
+                ));
 
             return Ok(history);
         }

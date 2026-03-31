@@ -1,7 +1,7 @@
 import { Component, signal, ViewChildren, QueryList, ElementRef, AfterViewInit } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { LucideAngularModule, Shield, Mail, Lock, CheckCircle, AlertTriangle, ArrowLeft } from 'lucide-angular';
+import { LucideAngularModule, Shield, Mail, Lock, CheckCircle, AlertTriangle, ArrowLeft, Eye, EyeOff } from 'lucide-angular';
 import { AuthService } from '../../services/auth.service';
 
 type Step = 'register' | 'verify';
@@ -13,12 +13,14 @@ type Step = 'register' | 'verify';
   templateUrl: './register.component.html'
 })
 export class RegisterComponent {
-  readonly icons = { Shield, Mail, Lock, CheckCircle, AlertTriangle, ArrowLeft };
+  readonly icons = { Shield, Mail, Lock, CheckCircle, AlertTriangle, ArrowLeft, Eye, EyeOff };
 
   step = signal<Step>('register');
   email = '';
   password = '';
   confirmPassword = '';
+  showPassword = false;
+  showConfirmPassword = false;
   registeredEmail = '';
   digits: string[] = ['', '', '', '', '', ''];
   error = signal<string | null>(null);

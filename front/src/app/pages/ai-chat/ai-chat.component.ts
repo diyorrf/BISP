@@ -4,6 +4,7 @@ import { LucideAngularModule, Send, Bot, User, BookOpen, Loader } from 'lucide-a
 import { DocumentService } from '../../services/document.service';
 import { QuestionService } from '../../services/question.service';
 import { DocumentDto } from '../../models/document.model';
+import { MarkdownPipe } from '../../pipes/markdown.pipe';
 
 interface ChatMessage {
   id: string;
@@ -23,7 +24,7 @@ const GREETING: ChatMessage = {
 @Component({
   selector: 'app-ai-chat',
   standalone: true,
-  imports: [FormsModule, LucideAngularModule],
+  imports: [FormsModule, LucideAngularModule, MarkdownPipe],
   templateUrl: './ai-chat.component.html'
 })
 export class AiChatComponent implements AfterViewChecked {
@@ -85,6 +86,10 @@ export class AiChatComponent implements AfterViewChecked {
       next: (history) => {
         const msgs: ChatMessage[] = [GREETING];
         for (const item of history) {
+          // Skip contract scanner entries — they belong to the scanner page, not chat
+          if (this.isScannerPrompt(item.questionText)) {
+            continue;
+          }
           msgs.push({
             id: item.id + '-q',
             role: 'user',
@@ -95,7 +100,7 @@ export class AiChatComponent implements AfterViewChecked {
             msgs.push({
               id: item.id + '-a',
               role: 'assistant',
-              content: item.answer,
+              content: this.sanitizeResponse(item.answer),
               timestamp: new Date(item.answeredAt ?? item.askedAt)
             });
           }
@@ -174,10 +179,103 @@ export class AiChatComponent implements AfterViewChecked {
     const msg: ChatMessage = {
       id: (Date.now() + 1).toString(),
       role: 'assistant',
-      content,
+      content: this.sanitizeResponse(content),
       timestamp: new Date()
     };
     this.messages.update(msgs => [...msgs, msg]);
+  }
+
+  private isScannerPrompt(text: string): boolean {
+    const t = text.trim().toLowerCase();
+    return t.includes('you must respond with valid json only') ||
+           t.includes('respond with valid json') ||
+           (t.includes('analyze this legal document') && t.includes('"risklevel"'));
+  }
+
+  private sanitizeResponse(content: string): string {
+    const trimmed = content.trim();
+    if (!(trimmed.startsWith('{') || trimmed.startsWith('['))) {
+      return content;
+    }
+    try {
+      const parsed = JSON.parse(trimmed);
+      // Handle compliance analysis JSON specifically
+      if (parsed.riskLevel && parsed.issues) {
+        return this.complianceToReadable(parsed);
+      }
+      return this.jsonToReadableText(parsed);
+    } catch {
+      return content;
+    }
+  }
+
+  private complianceToReadable(data: any): string {
+    const lines: string[] = [];
+    const riskEmoji: Record<string, string> = { high: '!!!', medium: '!!', low: '!' };
+
+    lines.push(`## Compliance Analysis`);
+    lines.push(`**Overall Risk Level:** ${(data.riskLevel ?? '').toUpperCase()}\n`);
+
+    if (data.summary) {
+      lines.push(`${data.summary}\n`);
+    }
+
+    if (data.issues?.length) {
+      lines.push(`### Issues Found\n`);
+      for (const issue of data.issues) {
+        const risk = (issue.risk ?? '').toUpperCase();
+        lines.push(`**${issue.clause}** — Risk: ${risk}`);
+        lines.push(`${issue.description}`);
+        if (issue.reference) {
+          lines.push(`*Reference: ${issue.reference}*`);
+        }
+        lines.push('');
+      }
+    }
+
+    if (data.recommendations?.length) {
+      lines.push(`### Recommendations\n`);
+      for (const rec of data.recommendations) {
+        lines.push(`- ${rec}`);
+      }
+    }
+
+    return lines.join('\n');
+  }
+
+  private jsonToReadableText(obj: any, depth = 0): string {
+    if (obj == null) return '';
+    if (typeof obj === 'string') return obj;
+    if (typeof obj === 'number' || typeof obj === 'boolean') return String(obj);
+
+    if (Array.isArray(obj)) {
+      return obj.map(item => {
+        if (typeof item === 'object' && item !== null) {
+          return this.jsonToReadableText(item, depth);
+        }
+        return `- ${item}`;
+      }).join('\n');
+    }
+
+    const lines: string[] = [];
+    for (const [key, value] of Object.entries(obj)) {
+      const label = key
+        .replace(/([A-Z])/g, ' $1')
+        .replace(/[_-]/g, ' ')
+        .replace(/^\w/, c => c.toUpperCase())
+        .trim();
+
+      if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+        lines.push(`**${label}:** ${value}`);
+      } else if (Array.isArray(value)) {
+        lines.push(`\n${'#'.repeat(Math.min(depth + 3, 5))} ${label}\n`);
+        lines.push(this.jsonToReadableText(value, depth + 1));
+      } else if (typeof value === 'object' && value !== null) {
+        lines.push(`\n${'#'.repeat(Math.min(depth + 3, 5))} ${label}\n`);
+        lines.push(this.jsonToReadableText(value, depth + 1));
+      }
+    }
+    return lines.join('\n');
   }
 
   private scrollToBottom(): void {

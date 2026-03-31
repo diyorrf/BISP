@@ -1,7 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { LucideAngularModule, Shield, Mail, Lock, AlertTriangle } from 'lucide-angular';
+import { LucideAngularModule, Shield, Mail, Lock, AlertTriangle, Eye, EyeOff } from 'lucide-angular';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -11,10 +11,11 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './login.component.html'
 })
 export class LoginComponent {
-  readonly icons = { Shield, Mail, Lock, AlertTriangle };
+  readonly icons = { Shield, Mail, Lock, AlertTriangle, Eye, EyeOff };
 
   email = '';
   password = '';
+  showPassword = false;
   error = signal<string | null>(null);
   loading = signal(false);
 

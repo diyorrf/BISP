@@ -61,6 +61,7 @@ namespace back.Services.Auth
 
             user.LastLoginAt = DateTime.UtcNow;
             await _userRepository.UpdateAsync(user);
+            await _userRepository.SaveChangesAsync();
 
             return (GenerateJwtToken(user), null);
         }
@@ -97,12 +98,12 @@ namespace back.Services.Auth
             if (confirmation == null || confirmation.Token != code || confirmation.ExpiresAt < DateTime.UtcNow)
                 return null;
 
-            user.EmailConfirmed = true;
+            // Use the tracked User from the confirmation entity to avoid EF tracking conflict
+            confirmation.User.EmailConfirmed = true;
             await _emailRepo.RemoveAsync(confirmation);
             await _emailRepo.SaveChangesAsync();
-            await _userRepository.SaveChangesAsync();
 
-            return GenerateJwtToken(user);
+            return GenerateJwtToken(confirmation.User);
         }
 
         public async Task<bool> ResendCodeAsync(string email)
