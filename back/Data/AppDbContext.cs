@@ -22,6 +22,7 @@ namespace back.Data
         public DbSet<LegalReference> LegalReferences => Set<LegalReference>();
         public DbSet<RegulatoryUpdate> RegulatoryUpdates => Set<RegulatoryUpdate>();
         public DbSet<RegulatoryAlert> RegulatoryAlerts => Set<RegulatoryAlert>();
+        public DbSet<DocumentTopic> DocumentTopics => Set<DocumentTopic>();
         public DbSet<Payment> Payments => Set<Payment>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -110,6 +111,20 @@ namespace back.Data
                 entity.HasOne(e => e.LegalReference)
                     .WithMany()
                     .HasForeignKey(e => e.LegalReferenceId)
+                    .IsRequired(false)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<DocumentTopic>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Topic).IsRequired().HasMaxLength(200);
+                entity.HasIndex(e => e.DocumentId);
+                entity.HasIndex(e => e.Topic);
+
+                entity.HasOne(e => e.Document)
+                    .WithMany(d => d.DocumentTopics)
+                    .HasForeignKey(e => e.DocumentId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
 

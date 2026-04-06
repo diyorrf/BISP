@@ -87,6 +87,20 @@ namespace back.Services.Document
                 }
             });
 
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    using var scope = _scopeFactory.CreateScope();
+                    var topicService = scope.ServiceProvider.GetRequiredService<ITopicExtractionService>();
+                    await topicService.ExtractTopicsAsync(document.Id, content);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Background topic extraction failed for document {DocumentId}", document.Id);
+                }
+            });
+
             return new DocumentDto(
                 document.Id,
                 document.FileName,

@@ -12,4 +12,5 @@ public interface IRegulatoryAlertRepository
     Task UpdateAsync(RegulatoryAlert alert, CancellationToken ct = default);
     Task MarkAllReadAsync(long userId, CancellationToken ct = default);
     Task<bool> ExistsAsync(Guid regulatoryUpdateId, Guid legalReferenceId, CancellationToken ct = default);
+    Task<bool> ExistsForDocumentAsync(Guid regulatoryUpdateId, Guid documentId, CancellationToken ct = default);
 }

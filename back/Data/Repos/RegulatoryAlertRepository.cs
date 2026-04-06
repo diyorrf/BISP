@@ -76,4 +76,10 @@ public class RegulatoryAlertRepository : IRegulatoryAlertRepository
         return await _context.RegulatoryAlerts
             .AnyAsync(a => a.RegulatoryUpdateId == regulatoryUpdateId && a.LegalReferenceId == legalReferenceId, ct);
     }
+
+    public async Task<bool> ExistsForDocumentAsync(Guid regulatoryUpdateId, Guid documentId, CancellationToken ct = default)
+    {
+        return await _context.RegulatoryAlerts
+            .AnyAsync(a => a.RegulatoryUpdateId == regulatoryUpdateId && a.DocumentId == documentId, ct);
+    }
 }

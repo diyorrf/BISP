@@ -22,10 +22,13 @@ public class AlertService : IAlertService
             a.Document.FileName,
             a.RegulatoryUpdate.Title,
             a.RegulatoryUpdate.Description,
-            $"{a.LegalReference.Title} — {a.LegalReference.ArticleOrSection}",
+            a.LegalReference != null
+                ? $"{a.LegalReference.Title} — {a.LegalReference.ArticleOrSection}"
+                : a.RegulatoryUpdate.LawIdentifier,
             a.RegulatoryUpdate.EffectiveDate,
             a.IsRead,
-            a.CreatedAt
+            a.CreatedAt,
+            a.RiskDescription
         ));
     }
 

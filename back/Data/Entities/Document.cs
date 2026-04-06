@@ -18,6 +18,7 @@ namespace back.Data.Entities
         public DateTime? LastAccessedAt { get; set; }
         public ICollection<Question> Questions { get; set; } = new List<Question>();
         public ICollection<LegalReference> LegalReferences { get; set; } = new List<LegalReference>();
+        public ICollection<DocumentTopic> DocumentTopics { get; set; } = new List<DocumentTopic>();
         public ICollection<RegulatoryAlert> RegulatoryAlerts { get; set; } = new List<RegulatoryAlert>();
     }
 }

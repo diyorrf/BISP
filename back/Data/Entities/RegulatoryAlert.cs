@@ -9,8 +9,9 @@ public class RegulatoryAlert
     public Document Document { get; set; } = null!;
     public Guid RegulatoryUpdateId { get; set; }
     public RegulatoryUpdate RegulatoryUpdate { get; set; } = null!;
-    public Guid LegalReferenceId { get; set; }
-    public LegalReference LegalReference { get; set; } = null!;
+    public Guid? LegalReferenceId { get; set; }
+    public LegalReference? LegalReference { get; set; }
+    public string? RiskDescription { get; set; }
     public bool IsRead { get; set; }
     public bool IsDismissed { get; set; }
     public DateTime CreatedAt { get; set; }

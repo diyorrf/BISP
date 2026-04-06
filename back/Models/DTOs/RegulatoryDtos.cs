@@ -9,7 +9,8 @@ public record RegulatoryAlertDto(
     string LawReference,
     DateTime? EffectiveDate,
     bool IsRead,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    string? RiskDescription = null
 );
 
 public record RegulatoryUpdateDto(

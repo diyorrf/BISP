@@ -8,4 +8,5 @@ export interface RegulatoryAlertDto {
   effectiveDate: string | null;
   isRead: boolean;
   createdAt: string;
+  riskDescription: string | null;
 }

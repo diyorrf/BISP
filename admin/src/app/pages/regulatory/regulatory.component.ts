@@ -1,6 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { LucideAngularModule, Plus, Play, Trash2, CheckCircle, Clock, X, Loader } from 'lucide-angular';
+import { LucideAngularModule, Plus, Play, Trash2, CheckCircle, Clock, X, Loader, Upload } from 'lucide-angular';
 import { AdminService } from '../../services/admin.service';
 import { AdminRegulatoryUpdate, CreateRegulatoryUpdate } from '../../models/admin.model';
 
@@ -11,13 +11,14 @@ import { AdminRegulatoryUpdate, CreateRegulatoryUpdate } from '../../models/admi
   templateUrl: './regulatory.component.html'
 })
 export class RegulatoryComponent implements OnInit {
-  readonly icons = { Plus, Play, Trash2, CheckCircle, Clock, X, Loader };
+  readonly icons = { Plus, Play, Trash2, CheckCircle, Clock, X, Loader, Upload };
 
   updates = signal<AdminRegulatoryUpdate[]>([]);
   loading = signal(true);
   showForm = signal(false);
   processingId = signal<string | null>(null);
   processResult = signal<string | null>(null);
+  creating = signal(false);
 
   form: CreateRegulatoryUpdate = {
     title: '',
@@ -27,6 +28,8 @@ export class RegulatoryComponent implements OnInit {
     effectiveDate: '',
     publishedAt: ''
   };
+
+  selectedFile: File | null = null;
 
   constructor(private adminService: AdminService) {}
 
@@ -41,8 +44,21 @@ export class RegulatoryComponent implements OnInit {
     });
   }
 
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.selectedFile = input.files[0];
+    }
+  }
+
+  removeFile(): void {
+    this.selectedFile = null;
+  }
+
   createUpdate(): void {
     if (!this.form.title || !this.form.lawIdentifier) return;
+
+    this.creating.set(true);
 
     const dto: CreateRegulatoryUpdate = {
       title: this.form.title,
@@ -53,11 +69,15 @@ export class RegulatoryComponent implements OnInit {
       publishedAt: this.form.publishedAt || undefined
     };
 
-    this.adminService.createRegulatoryUpdate(dto).subscribe({
+    this.adminService.createRegulatoryUpdate(dto, this.selectedFile ?? undefined).subscribe({
       next: (created) => {
         this.updates.update(list => [created, ...list]);
         this.resetForm();
         this.showForm.set(false);
+        this.creating.set(false);
+      },
+      error: () => {
+        this.creating.set(false);
       }
     });
   }
@@ -95,7 +115,14 @@ export class RegulatoryComponent implements OnInit {
     return new Date(date).toLocaleDateString();
   }
 
+  formatSize(bytes: number): string {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
   private resetForm(): void {
     this.form = { title: '', lawIdentifier: '', description: '', sourceUrl: '', effectiveDate: '', publishedAt: '' };
+    this.selectedFile = null;
   }
 }

@@ -7,6 +7,8 @@ public class RegulatoryUpdate
     public string Description { get; set; } = string.Empty;
     public string LawIdentifier { get; set; } = string.Empty;
     public string? SourceUrl { get; set; }
+    public string? Content { get; set; }
+    public string? StoredFileName { get; set; }
     public DateTime? EffectiveDate { get; set; }
     public DateTime PublishedAt { get; set; }
     public DateTime CreatedAt { get; set; }

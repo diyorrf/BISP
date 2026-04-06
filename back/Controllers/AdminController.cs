@@ -1,6 +1,7 @@
 using back.Data;
 using back.Data.Entities;
 using back.Models.DTOs;
+using back.Services.Parser;
 using back.Services.Regulatory;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,16 +16,23 @@ public class AdminController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly IRegulatoryMatchingService _matchingService;
+    private readonly IDocumentParserService _parserService;
     private readonly ILogger<AdminController> _logger;
+    private readonly string _storagePath;
 
     public AdminController(
         AppDbContext db,
         IRegulatoryMatchingService matchingService,
-        ILogger<AdminController> logger)
+        IDocumentParserService parserService,
+        ILogger<AdminController> logger,
+        IWebHostEnvironment env)
     {
         _db = db;
         _matchingService = matchingService;
+        _parserService = parserService;
         _logger = logger;
+        _storagePath = Path.Combine(env.ContentRootPath, "Storage");
+        Directory.CreateDirectory(_storagePath);
     }
 
     // ── Stats ──────────────────────────────────────────────
@@ -217,27 +225,58 @@ public class AdminController : ControllerBase
     }
 
     [HttpPost("regulatory-updates")]
+    [Consumes("multipart/form-data")]
     public async Task<ActionResult<AdminRegulatoryUpdateDto>> CreateRegulatoryUpdate(
-        [FromBody] CreateRegulatoryUpdateDto dto, CancellationToken ct)
+        [FromForm] string title,
+        [FromForm] string lawIdentifier,
+        [FromForm] string? description,
+        [FromForm] string? sourceUrl,
+        [FromForm] DateTime? effectiveDate,
+        [FromForm] DateTime? publishedAt,
+        IFormFile? file,
+        CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(dto.Title) || string.IsNullOrWhiteSpace(dto.LawIdentifier))
+        if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(lawIdentifier))
             return BadRequest("Title and LawIdentifier are required");
+
+        string? content = null;
+        string? storedFileName = null;
+
+        if (file != null && file.Length > 0)
+        {
+            if (!_parserService.IsSupported(file.ContentType))
+                return BadRequest($"File type '{file.ContentType}' is not supported. Please upload PDF, DOCX, or TXT files.");
+
+            content = await _parserService.ExtractTextAsync(file, ct);
+
+            var fileId = Guid.NewGuid();
+            var extension = Path.GetExtension(file.FileName);
+            storedFileName = $"reg_{fileId}{extension}";
+            var filePath = Path.Combine(_storagePath, storedFileName);
+
+            await using var stream = new FileStream(filePath, FileMode.Create);
+            await file.CopyToAsync(stream, ct);
+        }
 
         var entity = new RegulatoryUpdate
         {
             Id = Guid.NewGuid(),
-            Title = dto.Title,
-            Description = dto.Description ?? string.Empty,
-            LawIdentifier = dto.LawIdentifier,
-            SourceUrl = dto.SourceUrl,
-            EffectiveDate = dto.EffectiveDate,
-            PublishedAt = dto.PublishedAt ?? DateTime.UtcNow,
+            Title = title,
+            Description = description ?? string.Empty,
+            LawIdentifier = lawIdentifier,
+            SourceUrl = sourceUrl,
+            Content = content,
+            StoredFileName = storedFileName,
+            EffectiveDate = effectiveDate,
+            PublishedAt = publishedAt ?? DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow,
             IsProcessed = false
         };
 
         _db.RegulatoryUpdates.Add(entity);
         await _db.SaveChangesAsync(ct);
+
+        _logger.LogInformation("Regulatory update {Id} created with {HasFile}", entity.Id, file != null ? "file" : "no file");
 
         return CreatedAtAction(nameof(GetRegulatoryUpdates), new AdminRegulatoryUpdateDto(
             entity.Id, entity.Title, entity.Description, entity.LawIdentifier,

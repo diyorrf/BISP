@@ -46,8 +46,16 @@ export class AdminService {
     return this.http.get<AdminRegulatoryUpdate[]>(`${this.url}/regulatory-updates`);
   }
 
-  createRegulatoryUpdate(dto: CreateRegulatoryUpdate): Observable<AdminRegulatoryUpdate> {
-    return this.http.post<AdminRegulatoryUpdate>(`${this.url}/regulatory-updates`, dto);
+  createRegulatoryUpdate(dto: CreateRegulatoryUpdate, file?: File): Observable<AdminRegulatoryUpdate> {
+    const formData = new FormData();
+    formData.append('title', dto.title);
+    formData.append('lawIdentifier', dto.lawIdentifier);
+    if (dto.description) formData.append('description', dto.description);
+    if (dto.sourceUrl) formData.append('sourceUrl', dto.sourceUrl);
+    if (dto.effectiveDate) formData.append('effectiveDate', dto.effectiveDate);
+    if (dto.publishedAt) formData.append('publishedAt', dto.publishedAt);
+    if (file) formData.append('file', file);
+    return this.http.post<AdminRegulatoryUpdate>(`${this.url}/regulatory-updates`, formData);
   }
 
   processRegulatoryUpdate(id: string): Observable<ProcessResult> {

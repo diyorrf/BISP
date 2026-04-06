@@ -38,6 +38,7 @@ builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
 builder.Services.AddScoped<ILegalReferenceRepository, LegalReferenceRepository>();
 builder.Services.AddScoped<IRegulatoryUpdateRepository, RegulatoryUpdateRepository>();
 builder.Services.AddScoped<IRegulatoryAlertRepository, RegulatoryAlertRepository>();
+builder.Services.AddScoped<IDocumentTopicRepository, DocumentTopicRepository>();
 
 // Services
 builder.Services.AddScoped<IDocumentParserService, DocumentParserService>();
@@ -48,6 +49,7 @@ builder.Services.AddScoped<IContractReportPdfService, ContractReportPdfService>(
 
 // Regulatory Alert Services
 builder.Services.AddScoped<ILegalReferenceExtractionService, LegalReferenceExtractionService>();
+builder.Services.AddScoped<ITopicExtractionService, TopicExtractionService>();
 builder.Services.AddScoped<IRegulatoryMatchingService, RegulatoryMatchingService>();
 builder.Services.AddScoped<IAlertService, AlertService>();
 builder.Services.AddHostedService<RegulatoryMonitorBackgroundService>();

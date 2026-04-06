@@ -91,6 +91,12 @@
             </div>
             <p class="text-sm text-slate-600 line-clamp-2">{{ alert.updateDescription }}</p>
 
+            @if (alert.riskDescription) {
+              <div class="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <p class="text-sm text-amber-800">{{ alert.riskDescription }}</p>
+              </div>
+            }
+
             <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-xs text-slate-500">
               <span class="flex items-center gap-1">
                 <lucide-icon [img]="icons.Scale" [size]="14"></lucide-icon>
