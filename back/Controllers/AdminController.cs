@@ -267,8 +267,12 @@ public class AdminController : ControllerBase
             SourceUrl = sourceUrl,
             Content = content,
             StoredFileName = storedFileName,
-            EffectiveDate = effectiveDate,
-            PublishedAt = publishedAt ?? DateTime.UtcNow,
+            EffectiveDate = effectiveDate.HasValue
+                ? DateTime.SpecifyKind(effectiveDate.Value, DateTimeKind.Utc)
+                : null,
+            PublishedAt = publishedAt.HasValue
+                ? DateTime.SpecifyKind(publishedAt.Value, DateTimeKind.Utc)
+                : DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow,
             IsProcessed = false
         };

@@ -125,7 +125,21 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
+
+    var attempts = 0;
+    while (true)
+    {
+        try
+        {
+            db.Database.Migrate();
+            break;
+        }
+        catch (Exception ex) when (attempts++ < 10)
+        {
+            Console.WriteLine($"Migrate attempt {attempts} failed: {ex.Message}. Retrying in 3s...");
+            Thread.Sleep(3000);
+        }
+    }
 
     try
     {
